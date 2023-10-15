@@ -17,6 +17,7 @@ import MongoDBClient from './db.js';
 
 /**routes */
 import router from './router/index.js';
+import { errorMiddleware } from './middlewares/error-middleware.js';
 
 const PORT = process.env.SERVER_PORT || 5000;
 const HOST = process.env.SERVER_HOST;
@@ -28,10 +29,15 @@ dotenv.config();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({
+    credentials: true,
+    origin: process.env.CLIENT_URL
+    
+}));
 
 app.use('/api', router);
 
+app.use(errorMiddleware);
 const start = async() => {
      try{
        

@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 import MailService from './mail-service.js';
 import * as tokenService from './token-service.js';
 import UserDto from '../dtos/user-dto.js';
+import { ApiError } from "../exceptions/api-error.js";
+
 const SALTROUNDS = 10;
 
 
@@ -13,7 +15,7 @@ export const registration = async (email, password, firstName, lastName, role = 
    //verify user exists
     const candidate = await UserModel.findOne({email})
     if(candidate){
-        throw new Error('email exists');
+        throw ApiError.BadRequest('email exists');  
     }
    
     //crypt password 
@@ -52,4 +54,78 @@ export const registration = async (email, password, firstName, lastName, role = 
     return{ ...tokens, user: userDto }
 }
 
-const activate(activateLink)
+export const activate = async (activationLink) => {
+    const userDoc = await UserModel.findOne({activationLink});
+    if(!userDoc){
+        throw ApiError.BadRequest('Error activation link')
+    }
+
+    userDoc.isActivated = true;
+
+    await userDoc.save();
+}
+
+export const login = async (email, password) => {
+
+    const userDoc = await UserModel.findOne({email});
+    if(!userDoc){
+        throw ApiError.BadRequest('User doesn\'t found')
+    }
+    const compare = await bcrypt.compare(password, userDoc.password);
+    console.log("compare", compare)
+
+    if(!compare){
+        throw ApiError.BadRequest('Wrong username or password')
+    }
+
+    const userDto = new UserDto(userDoc);
+
+    const tokens = await tokenService.generateToken({...userDto});
+   
+    console.log('😍😍 from login', tokens)
+
+    await tokenService.saveToken(userDto.id,  tokens.refreshToken)
+
+    console.log( 'from login userDto', userDto )
+    return{ ...tokens, user: userDto }
+   
+}
+
+export const logout = async (refreshToken) => {
+
+    const token  = await tokenService.removeToken(refreshToken);
+    return token;
+}
+
+export const refreshToken = async (refreshToken) => {
+    
+    if(!refreshToken){
+        throw ApiError.UnauthorizedError(); //user doesn't have the token
+    }
+
+    const userData = await tokenService.validateRefreshToken(refreshToken);
+    const tokenFromDb = await tokenService.findToken(refreshToken);
+    console.log('refreshToken', userData, tokenFromDb)
+    if(!userData ||  !tokenFromDb){
+        throw ApiError.UnauthorizedError(); //user doesn't have the token
+    }
+   
+    const user = await UserModel.findById(userData.id) //user's info can change, so we use the current info db
+
+    const userDto = new UserDto(user);
+
+    const tokens = await tokenService.generateToken({...userDto});
+    console.log('😍😍 from refresh', tokens)
+
+    await tokenService.saveToken(userDto.id,  tokens.refreshToken)
+
+    console.log( 'from refresh userDto', userDto )
+    return{ ...tokens, user: userDto }
+   
+}
+
+
+export const  getAllUsers = async () => {
+  const users = UserModel.find();
+  return users;
+}
