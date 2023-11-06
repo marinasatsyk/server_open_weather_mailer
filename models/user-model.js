@@ -10,7 +10,17 @@ const UserSchema = new Schema({
     lastName: {type: String, trim: true,lowercase: true, trim: true,required: true},
     createdDateTime: {type: Date, required: true},
     role: {type: String, required: true, default: 'user'},
-}, {collection: "user"})
+    bookmarks: [
+        {city: {type: Schema.Types.ObjectId, ref: 'City'}, 
+        isFollowHistory: {type: Boolean, default: false}} 
+    ],
+    preferences:{
+        
+        theme: {type: String, required: true,  default: 'day'},
+        language: {type: String, required: true,  default: 'en'}
+    }
+}
+, {collection: "user"})
 
 const UserModel = model("User", UserSchema);
 

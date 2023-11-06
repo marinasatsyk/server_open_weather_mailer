@@ -8,7 +8,7 @@ import UserDto from '../dtos/user-dto.js';
 import { ApiError } from "../exceptions/api-error.js";
 
 const SALTROUNDS = 10;
-
+const {SERVER_HOST, SERVER_PORT} = process.env;
 
 export const registration = async (email, password, firstName, lastName, role = 'user') => {
     console.log(email, password, firstName, lastName, role);
@@ -73,11 +73,15 @@ export const login = async (email, password) => {
     }
     const compare = await bcrypt.compare(password, userDoc.password);
     console.log("compare", compare)
-
+    
     if(!compare){
         throw ApiError.BadRequest('Wrong username or password')
     }
 
+    //verif if email is activated
+    if(!userDoc.isActivated){
+        throw ApiError.BadRequest('Email was not activated')
+    }
     const userDto = new UserDto(userDoc);
 
     const tokens = await tokenService.generateToken({...userDto});

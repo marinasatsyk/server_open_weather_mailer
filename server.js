@@ -19,9 +19,8 @@ import MongoDBClient from './db.js';
 import router from './router/index.js';
 import { errorMiddleware } from './middlewares/error-middleware.js';
 
-const PORT = process.env.SERVER_PORT || 5000;
-const HOST = process.env.SERVER_HOST;
-
+const PORT = process.env.SERVER_PORT || 18500;
+const {SERVER_HOST, HOST, CLIENT_URL, CLIENT_PORT} = process.env;
 
 const app = express();
 dotenv.config();
@@ -31,8 +30,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(cookieParser());
 app.use(cors({
     credentials: true,
-    origin: process.env.CLIENT_URL
-    
+    origin: `http://${HOST}:${CLIENT_PORT}` //react runs in 3000
 }));
 
 app.use('/api', router);
@@ -41,12 +39,12 @@ app.use(errorMiddleware);
 const start = async() => {
      try{
        
-        app.listen(process.env.SERVER_PORT, () => {
-            console.log(`✅SERVER ready on : http://${HOST}:${PORT}`); 
+        app.listen(PORT, () => {
+            console.log(`✅SERVER ready on : http://${SERVER_HOST}:${PORT}`); 
         })
         MongoDBClient.initialize()
      }catch(err){
-    
+        
      }
 
 }

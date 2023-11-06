@@ -87,5 +87,32 @@ export const getUsers =  async(req, res, next) =>  {
         next(err)
     }
 }
+export const logoutAll =  async(req, res, next) =>  {
+    try{
+        // const users = await userService.getAllUsers();
+        // return res.json(users)
+
+    }catch(err){
+        next(err)
+    }
+}
+export const update =  async(req, res, next) =>  {
+    try{
+        // const users = await userService.getAllUsers();
+        // return res.json(users)
+
+    }catch(err){
+        next(err)
+    }
+}
+export const dashboard =  async(req, res, next) =>  {
+    try{
+        // const users = await userService.getAllUsers();
+        // return res.json(users)
+
+    }catch(err){
+        next(err)
+    }
+}
 
 
