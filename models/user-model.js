@@ -11,11 +11,13 @@ const UserSchema = new Schema({
     createdDateTime: {type: Date, required: true},
     role: {type: String, required: true, default: 'user'},
     bookmarks: [
-        {city: {type: Schema.Types.ObjectId, ref: 'City'}, 
-        isFollowHistory: {type: Boolean, default: false}} 
+        {
+            city: {type: Schema.Types.ObjectId, ref: 'City'}, 
+            isFollowHistory: {type: Boolean, default: false},
+            isActive:  {type: Boolean, default: false},
+        } 
     ],
     preferences:{
-        
         theme: {type: String, required: true,  default: 'day'},
         language: {type: String, required: true,  default: 'en'}
     }

@@ -6,7 +6,7 @@ const CitySchema = new Schema({
         lat: {type: Number, required: true},
         lon: {type: Number, required: true},
         country: {type: String, required: true},
-        zip : {type: String, required: true},
+        zip : {type: String},
         insee: {type: String},
         isHistory: {type: Boolean, default: false},
     })

@@ -1,8 +1,10 @@
-import UserModel from "../models/user-model.js"
+import UserModel from "../models/user-model.js";
+import CityModel from "../models/city-model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from 'uuid';
 import MailService from './mail-service.js';
+import * as CityServise from './city-service.js';
 import * as tokenService from './token-service.js';
 import UserDto from '../dtos/user-dto.js';
 import { ApiError } from "../exceptions/api-error.js";
@@ -87,20 +89,33 @@ export const login = async (email, password) => {
         throw ApiError.BadRequest('Email was not activated')
     }
 
-    // const userDto = new UserDto(userDoc);
     const userFullDto = new UserFullDto(userDoc);
-
+    const userDto = new UserDto(userDoc);
     console.log("userFullDtosuivant", userFullDto)
-    const tokens = await tokenService.generateToken({...userFullDto});
-   console.log("😍😍apres generaite token")
+    const tokens = await tokenService.generateToken({...userDto});
     console.log('😍😍 from login', tokens)
 
-    await tokenService.saveToken(userFullDto.id,  tokens.refreshToken)
+    await tokenService.saveToken(userDto.id,  tokens.refreshToken)
 
     console.log( 'from login userDto', userFullDto )
     return{ ...tokens, user: userFullDto }
    
 }
+
+
+export const getUser = async (id) => {
+    console.log('==========================>we have acces to getUser')
+   
+    const userDoc = await UserModel.findById(id);
+    const userDto = new UserFullDto(userDoc);
+
+    if(!userDoc){
+      throw ApiError.BadRequest('User doesn\'t found')
+    }
+    return userDto;
+}
+
+
 
 export const logout = async (refreshToken) => {
 
@@ -117,28 +132,55 @@ export const refreshToken = async (refreshToken) => {
 
     const userData = await tokenService.validateRefreshToken(refreshToken);
     const tokenFromDb = await tokenService.findToken(refreshToken);
+
     console.log('refreshToken', userData, tokenFromDb)
     if(!userData ||  !tokenFromDb){
         throw ApiError.UnauthorizedError(); //user doesn't have the token
     }
    
+
+    
     const user = await UserModel.findById(userData.id) //user's info can change, so we use the current info db
 
-    //  const userDto = new UserDto(user);
+    const userDto = new UserDto(user);
     const userFullDto = new UserFullDto(user);
 
-    const tokens = await tokenService.generateToken({...userFullDto});
+    const tokens = await tokenService.generateToken({...userDto});
     console.log('😍😍 from refresh', tokens)
 
-    await tokenService.saveToken(userFullDto.id,  tokens.refreshToken)
+    await tokenService.saveToken(userDto.id,  tokens.refreshToken)
 
     console.log( 'from refresh userDto', userFullDto )
     return{ ...tokens, user: userFullDto }
-   
 }
 
 
 export const  getAllUsers = async () => {
   const users = UserModel.find();
   return users;
+}
+
+
+export const updateBookmarks = async (userId, city, isFollowingHistory) => {
+    //history, active
+    const userDoc = await UserModel.findById(userId);
+   
+    if(!userDoc){
+        throw ApiError.BadRequest('User doesn\'t found');
+    }
+    const cityDoc = await CityServise.findOrCreateCity(city, isFollowingHistory);
+
+    if(!cityDoc){
+        throw ApiError.apply('Error of city creation')
+    }
+
+    const newBookmark = {
+        city: cityDoc._id,
+        isFollowingHisotory: city.isFollowingHisotory,
+        isActive: city.isActive
+    }
+    
+    userDoc.bookmarks.push(newBookmark);
+    await user.save();
+   
 }

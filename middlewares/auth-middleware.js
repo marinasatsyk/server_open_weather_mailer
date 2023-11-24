@@ -4,7 +4,7 @@ import * as tokenService from '../service/token-service.js';
 export const authMiddleware = async(req, res, next) => {
     try{
         const authorizationHeader = req.headers.authorization;
-        console.log(authorizationHeader)
+        console.log('authMiddleware', authorizationHeader)
         if(!authorizationHeader){
             return next(ApiError.UnauthorizedError())
         }
@@ -17,7 +17,7 @@ export const authMiddleware = async(req, res, next) => {
 
         const userData = await  tokenService.validateAccessToken(accessToken);
 
-        console.log(userData)
+        console.log('is null here???? when token expires', userData)
 
         if(!userData ){
             return next(ApiError.UnauthorizedError())
@@ -30,6 +30,8 @@ export const authMiddleware = async(req, res, next) => {
         return next(ApiError.UnauthorizedError())
     }
 }
+
+
 export const authAdminMiddleware = async(req, res, next) => {
     try{
         const authorizationHeader = req.headers.authorization;

@@ -1,6 +1,8 @@
 import { ApiError } from '../exceptions/api-error.js';
 
 
+
+
 export const historyWeather =  async(req, res, next) =>  {
     try{
         // const users = await userService.getAllUsers();

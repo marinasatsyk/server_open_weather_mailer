@@ -6,7 +6,7 @@ const REFRESH_TOKEN_KEY=  process.env.JWT_REFRESH_SECRET;
 
 export const generateToken = async(payload) => {
     console.log("payload", payload)
-    const accessToken = jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '15s'})
+    const accessToken = jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '30s'})
     const refreshToken = jwt.sign(payload, REFRESH_TOKEN_KEY, {expiresIn: '30d'})
 
     console.log('from generateToken',   accessToken,
@@ -22,17 +22,19 @@ export const generateToken = async(payload) => {
 export const validateAccessToken = async(token) => {
 
     try{
-        console.log('from validate access token')
+        console.log('from validate access token', token)
         const userData =  jwt.verify(token, ACESS_TOKEN_KEY);
 
         console.log('🎲🎲🎲validate Access Token', userData)
         return userData;
     }catch(err){
+        console.error(err);
         return null;
     }
 }
 export const validateRefreshToken = async(refreshToken) => {
-
+    console.log('we validate RERFRESH TOKEN')
+    
     try{
         const userData = jwt.verify(refreshToken, REFRESH_TOKEN_KEY)
         return userData;

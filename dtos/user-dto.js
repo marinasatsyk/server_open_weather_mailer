@@ -1,9 +1,9 @@
 //data transfer objects
 class UserDto  {
     id;
-     email;
-     isActivated;
-     role;
+    email;
+    isActivated;
+    role;
       constructor(model){
         this.id = model._id;
         this.email = model.email;
