@@ -15,10 +15,8 @@ const {SERVER_HOST, SERVER_PORT} = process.env;
 
 export const registration = async (email, password, firstName, lastName, role = 'user') => {
     console.log(email, password, firstName, lastName, role);
-   //verify user exists
     const candidate = await UserModel.findOne({email})
     if(candidate){
-        console.log('candidate exists')
         throw ApiError.BadRequest('email exists');  
     }
    
@@ -26,7 +24,6 @@ export const registration = async (email, password, firstName, lastName, role = 
     const hash = await bcrypt.hash(password, SALTROUNDS);
     //generate activation link
     const activationLink = uuidv4();
-    console.log('hash', hash);
     
     //create user 
     const userDoc = await  UserModel.create({
@@ -38,7 +35,6 @@ export const registration = async (email, password, firstName, lastName, role = 
         activationLink, 
         role
     }) 
-    console.log("userDoc", userDoc)
     //send confirm mail+ activation link
     const mailService = new MailService();
     await mailService.sendActivationMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/activate/${activationLink}`)
@@ -71,7 +67,7 @@ export const activate = async (activationLink) => {
 
 export const login = async (email, password) => {
     console.log("login")
-    const userDoc = await UserModel.findOne({email});
+    const userDoc = await UserModel.findOne({email}).populate('bookmarks.city');
     if(!userDoc){
         throw ApiError.BadRequest('User doesn\'t found')
     }
@@ -116,9 +112,7 @@ export const getUser = async (id) => {
 }
 
 
-
 export const logout = async (refreshToken) => {
-
     const token  = await tokenService.removeToken(refreshToken);
     return token;
 }
@@ -138,8 +132,6 @@ export const refreshToken = async (refreshToken) => {
         throw ApiError.UnauthorizedError(); //user doesn't have the token
     }
    
-
-    
     const user = await UserModel.findById(userData.id) //user's info can change, so we use the current info db
 
     const userDto = new UserDto(user);
@@ -155,32 +147,56 @@ export const refreshToken = async (refreshToken) => {
 }
 
 
-export const  getAllUsers = async () => {
-  const users = UserModel.find();
-  return users;
-}
+//Bookmarks
 
 
-export const updateBookmarks = async (userId, city, isFollowingHistory) => {
-    //history, active
-    const userDoc = await UserModel.findById(userId);
-   
-    if(!userDoc){
-        throw ApiError.BadRequest('User doesn\'t found');
-    }
-    const cityDoc = await CityServise.findOrCreateCity(city, isFollowingHistory);
-
+//add
+export const updateBookmarks = async (userDoc, city, isHistory, isActive) => {
+    console.log("SERVICE in updateBookmarks ")
+    
+    //history part!!!!
+    const cityDoc = await CityServise.findOrCreateCity(city, isHistory);
+        console.log("city info after creation or search", cityDoc)
     if(!cityDoc){
         throw ApiError.apply('Error of city creation')
     }
 
-    const newBookmark = {
-        city: cityDoc._id,
-        isFollowingHisotory: city.isFollowingHisotory,
-        isActive: city.isActive
+    console.log('NEW CITY id stringify', String(cityDoc._id))
+
+    const idsBokmarks = userDoc.bookmarks.map((bookmark) => {
+        return String(bookmark.city._id);
+    })
+
+    //verify if city doesn't exists
+   const isFound = idsBokmarks.includes(String(cityDoc._id));
+
+   if(!isFound){
+        const newBookmark = {
+                city: cityDoc._id,
+                isFollowHistory: isHistory,
+                isActive
+        }
+
+        //changecitybyDefault if isActive true
+        if(isActive){
+            userDoc.bookmarks .forEach(bookmark => {
+                bookmark.isActive = false;
+            });
+        }
+        userDoc.bookmarks.push(newBookmark);
+        await userDoc.save();
     }
-    
-    userDoc.bookmarks.push(newBookmark);
-    await user.save();
-   
+
+   const updatedUser = await UserModel.findById(userDoc._id).populate('bookmarks.city');
+
+   return updatedUser;
 }
+
+
+
+
+
+export const  getAllUsers = async () => {
+    const users = UserModel.find();
+    return users;
+  }

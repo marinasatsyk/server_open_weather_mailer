@@ -2,7 +2,7 @@ import { ApiError } from '../exceptions/api-error.js';
 import UserModel from '../models/user-model.js';
 import * as  userService from '../service/user-service.js';
 import { validationResult } from 'express-validator';
-import jwt from 'jsonwebtoken';
+import * as helpers from '../helpers/helpers.js';
    
 export const  registration =  async(req, res, next) =>  {
     try{
@@ -16,7 +16,8 @@ export const  registration =  async(req, res, next) =>  {
 
         const userData = await userService.registration(email, password, firstName, lastName);
         
-        res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true}) //for clientSide cookies refreshToken
+        //for clientSide cookies refreshToken
+        res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true}) 
         return res.json(userData); //sent in client side json object
     }catch(err){
         next(err)
@@ -82,15 +83,7 @@ export const refresh=  async(req, res, next) =>  {
 
 export const getUser =  async(req, res, next) =>  {
     try{
-        const authorizationHeader = req.headers.authorization;
-        console.log('authMiddleware', authorizationHeader)
-        if(!authorizationHeader){
-            return next(ApiError.UnauthorizedError())
-        }
-        const accessToken = authorizationHeader.split(' ')[1];
-      const decode = jwt.decode(accessToken);
-        console.log("HELLO  token", decode)
-        const id = decode.id;
+        const id = helpers.getId(req, res, next);
         const userData = await userService.getUser(id)
         return res.json(userData); //sent in client side json object
 
@@ -100,52 +93,69 @@ export const getUser =  async(req, res, next) =>  {
 }
 
 export const updateBookmarks =  async(req, res, next) =>  {
+    console.log("we update bookmarks!!!")
    //get one user
-   const {id} = req.params;
-   const{city, isFollowingHistory, isActive} = req.body;
+   const{city, isHistory, isActive } = req.body;
+
+   const idUser = helpers.getId(req, res, next);
 
    try{
-    const updatedUser = await userService.updateBookmarks(id, city, isFollowingHistory, isActive)
 
+    const userDoc = await UserModel.findById(idUser);
+    
+    if(!userDoc){
+        throw ApiError.BadRequest('User doesn\'t found');
+    }
 
+    const updatedUser = await userService.updateBookmarks(userDoc, city, isHistory, isActive);
+
+    console.log("controller reponse ====> ", updatedUser)
+    return res.json(updatedUser);
    }catch(err){
     next(err) //we use error middleware 
    }
-   
-        //    //get bookmarks
-        //    let bookmarks = userData.bookmarks;
-
-        //    //get oneCity 
-        //    let candidatCity = await cityService.getCity(lat, lon);
-
-        //    if(!candidatCity){
-        //     //create one
-        //    }
-
-        
-
-        //update bookmarks OR  createCity+update bookmars
-
-        //   const cityToFollow = req.body.city;
-        // // name, lat, lon, local_names, state, country
-
-        //     try{
-        //         const errors = validationResult(req); //result from express validators
-
-
-                
-        //         return res.json(users)
-
-        //     }catch(err){
-        //         next(err)
-        //     }
 }
+export const updateActiveBookmark =  async(req, res, next) =>  {
+    console.log("we update updateActiveBookmark!!!")
+   //get one user
+   const{cityId } = req.body;
+   console.log(cityId)
+
+   const idUser = helpers.getId(req, res, next);
+   console.log(idUser)
+
+
+   try{
+    const userDoc = await UserModel.findById(idUser);
+    console.log('userDoc', userDoc)
+    if(!userDoc){
+        throw ApiError.BadRequest('User doesn\'t found');
+    }
+
+   userDoc.bookmarks.forEach(bookmark => {
+       if (String(bookmark.city) === cityId){
+        console.log('we have sity',String(bookmark.city), cityId)
+        bookmark.isActive = true;
+       }else{
+        bookmark.isActive = false;
+       }
+    })
+    await userDoc.save();
+
+    const updatedUser = await UserModel.findById(idUser).populate('bookmarks.city');
+    console.log("controller updateActiveBookmark reponse ====> ", updatedUser)
+    return res.json(updatedUser);
+   }catch(err){
+    next(err) //we use error middleware 
+   }
+}
+
+
 
 export const getUsers =  async(req, res, next) =>  {
     try{
         const users = await userService.getAllUsers();
         return res.json(users)
-
     }catch(err){
         next(err)
     }

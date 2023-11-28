@@ -1,6 +1,7 @@
 import Mongoose from "mongoose";
+import  {Schema, model} from 'mongoose';
 
-const historicalWeatherSchema = new Mongoose.Schema(
+const historicalWeatherSchema = new Schema(
     {
         dt: { type: Date,  required: true },
         main: {
@@ -26,12 +27,12 @@ const historicalWeatherSchema = new Mongoose.Schema(
             icon: {type: String, required: true}
           }
         ],
-        zip : {type: String, required: true},
+        zip : {type: String},
         city: {type: Schema.Types.ObjectId, ref: 'City'},
-      },
-    )
+    },
+)
     
 
-const historicalWeatherModel = Mongoose.model("historicalweather", historicalWeatherSchema);
+const historicalWeatherModel = model("historicalweather", historicalWeatherSchema);
 
 export default historicalWeatherModel;

@@ -22,7 +22,7 @@ export const authMiddleware = async(req, res, next) => {
         if(!userData ){
             return next(ApiError.UnauthorizedError())
         }
-
+        console.log('we continu auth middleware')
         req.user = userData;
         next();
 

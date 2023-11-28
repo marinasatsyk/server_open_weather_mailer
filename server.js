@@ -38,15 +38,13 @@ app.use('/api', router);
 app.use(errorMiddleware);
 const start = async() => {
      try{
-       
+        MongoDBClient.initialize()
+
         app.listen(PORT, () => {
             console.log(`✅SERVER ready on : http://${SERVER_HOST}:${PORT}`); 
         })
-        MongoDBClient.initialize()
      }catch(err){
-        
-     }
-
+        console.error('Erreur de connexion ', err.message);     }
 }
 
 start();

@@ -23,20 +23,21 @@ router.post('/logout', userController.logout);
 router.post('/logoutAll', userController.logoutAll); //delete all refreshTokens
 
 //#todo
-router.post('/user/bookmarks', 
-        authMiddleware,
-        check('name').isString().trim().escape(),
-        check('lat').isNumeric().escape(),
-        check('lon').isNumeric().escape(),
-        check('local_names').isObject,
-        check('state').isString().trim().escape(),
-        check('country').isString().trim().escape(),
-        userController.updateBookmarks)
+// router.post('/user/bookmarks', 
+//         authMiddleware,
+//         check('name').isString().trim().escape(),
+//         check('lat').isNumeric().escape(),
+//         check('lon').isNumeric().escape(),
+//         check('local_names').isObject,
+//         check('state').isString().trim().escape(),
+//         check('country').isString().trim().escape(),
+//         userController.updateBookmarks)
+router.post('/user/bookmarks',authMiddleware,userController.updateBookmarks);
+router.put('/user/bookmarks',authMiddleware,userController.updateActiveBookmark);
 
 router.put('/user/:id', authMiddleware,   userController.update);
 
 router.get('/user', authMiddleware,   userController.getUser);
-
 
 //weather
 //#todo

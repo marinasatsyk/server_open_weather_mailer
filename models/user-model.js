@@ -1,5 +1,4 @@
 import  {Schema, model} from 'mongoose';
-
 const UserSchema = new Schema({
     email: {type: String, unique: true, lowercase: true, required: true},
     password: {type: String, required: true},
@@ -12,7 +11,7 @@ const UserSchema = new Schema({
     role: {type: String, required: true, default: 'user'},
     bookmarks: [
         {
-            city: {type: Schema.Types.ObjectId, ref: 'City'}, 
+            city: {type: Schema.Types.ObjectId, ref: 'City' }, 
             isFollowHistory: {type: Boolean, default: false},
             isActive:  {type: Boolean, default: false},
         } 
