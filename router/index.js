@@ -32,8 +32,10 @@ router.post('/logoutAll', userController.logoutAll); //delete all refreshTokens
 //         check('state').isString().trim().escape(),
 //         check('country').isString().trim().escape(),
 //         userController.updateBookmarks)
+
 router.post('/user/bookmarks',authMiddleware,userController.updateBookmarks);
 router.put('/user/bookmarks',authMiddleware,userController.updateActiveBookmark);
+router.delete('/user/bookmarks',authMiddleware,userController.deleteBookmark);
 
 router.put('/user/:id', authMiddleware,   userController.update);
 

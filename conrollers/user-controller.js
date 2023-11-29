@@ -3,7 +3,8 @@ import UserModel from '../models/user-model.js';
 import * as  userService from '../service/user-service.js';
 import { validationResult } from 'express-validator';
 import * as helpers from '../helpers/helpers.js';
-   
+import mongoose from 'mongoose';
+
 export const  registration =  async(req, res, next) =>  {
     try{
         const errors = validationResult(req); //result from express validators
@@ -92,6 +93,7 @@ export const getUser =  async(req, res, next) =>  {
     }
 }
 
+//create
 export const updateBookmarks =  async(req, res, next) =>  {
     console.log("we update bookmarks!!!")
    //get one user
@@ -115,6 +117,8 @@ export const updateBookmarks =  async(req, res, next) =>  {
     next(err) //we use error middleware 
    }
 }
+
+//update
 export const updateActiveBookmark =  async(req, res, next) =>  {
     console.log("we update updateActiveBookmark!!!")
    //get one user
@@ -124,7 +128,7 @@ export const updateActiveBookmark =  async(req, res, next) =>  {
    const idUser = helpers.getId(req, res, next);
    console.log(idUser)
 
-
+    //@to-do replace in service
    try{
     const userDoc = await UserModel.findById(idUser);
     console.log('userDoc', userDoc)
@@ -150,6 +154,47 @@ export const updateActiveBookmark =  async(req, res, next) =>  {
    }
 }
 
+
+//delete
+export const deleteBookmark =  async(req, res, next) =>  {
+    console.log("we delete Bookmark")
+   //get one user
+   const{cityId } = req.body;
+   
+//    const cityIdToRemove = mongoose.Types.ObjectId(cityId);
+   const idUser = helpers.getId(req, res, next);
+   console.log(idUser)
+
+    //@to-do replace in service
+   try{
+    const userDoc = await UserModel.findById(idUser);
+    console.log('userDoc', userDoc)
+    if(!userDoc){
+        throw ApiError.BadRequest('User doesn\'t found');
+    }
+
+    const isActiveDeletingCity =  userDoc.bookmarks.find(bookmark => String(bookmark.city) === cityId );
+  
+    await UserModel.updateOne(
+        { _id: idUser },
+        { $pull: { 'bookmarks': { city: cityId } }}
+    );
+
+    const updatedUser = await UserModel.findById(idUser).populate('bookmarks.city');
+
+    if(isActiveDeletingCity){
+        console.log('we deleted active bookmark')
+        updatedUser.bookmarks[0].isActive = true
+        await  updatedUser.save();
+        const newUpdated = await UserModel.findById(idUser).populate('bookmarks.city');
+        return res.json(newUpdated);
+    }
+
+    return res.json(updatedUser);
+   }catch(err){
+    next(err) //we use error middleware 
+   }
+}
 
 
 export const getUsers =  async(req, res, next) =>  {
