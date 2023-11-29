@@ -1,6 +1,7 @@
 import { CityDto } from "../dtos/city-dto";
 import CityModel from "../models/city-model";
 
+//create
 export const createCity =  async(req, res, next) =>  {
     const city = req.body.city;
 
@@ -24,11 +25,6 @@ export const createCity =  async(req, res, next) =>  {
         state: city.state,
         country: city.country,
     });
-
-
-
-
-
 
 
     try{

@@ -66,7 +66,7 @@ export const activate =  async(req, res, next) =>  {
 }
 
 
-export const refresh=  async(req, res, next) =>  {
+export const refresh =  async(req, res, next) =>  {
     try{
         const {refreshToken} = req.cookies;
         console.log('refreshToken', refreshToken);
@@ -93,108 +93,64 @@ export const getUser =  async(req, res, next) =>  {
     }
 }
 
+/**Bookmarks
+ */
+
 //create
 export const updateBookmarks =  async(req, res, next) =>  {
+    /** this service create one bookmark
+     * create city if there is not
+     * get hiscorical data 
+     * update user information
+     */
+
     console.log("we update bookmarks!!!")
    //get one user
    const{city, isHistory, isActive } = req.body;
-
    const idUser = helpers.getId(req, res, next);
-
    try{
+        const userDoc = await UserModel.findById(idUser);
+        
+        if(!userDoc){
+            throw ApiError.BadRequest('User doesn\'t found');
+        }
 
-    const userDoc = await UserModel.findById(idUser);
-    
-    if(!userDoc){
-        throw ApiError.BadRequest('User doesn\'t found');
-    }
-
-    const updatedUser = await userService.updateBookmarks(userDoc, city, isHistory, isActive);
-
-    console.log("controller reponse ====> ", updatedUser)
-    return res.json(updatedUser);
+        const updatedUser = await userService.updateBookmarks(userDoc, city, isHistory, isActive);
+        
+        console.log("controller reponse ====> ", updatedUser)
+        return res.json(updatedUser);
    }catch(err){
-    next(err) //we use error middleware 
+    next(err)
    }
 }
 
 //update
 export const updateActiveBookmark =  async(req, res, next) =>  {
-    console.log("we update updateActiveBookmark!!!")
-   //get one user
    const{cityId } = req.body;
-   console.log(cityId)
-
    const idUser = helpers.getId(req, res, next);
-   console.log(idUser)
 
-    //@to-do replace in service
    try{
-    const userDoc = await UserModel.findById(idUser);
-    console.log('userDoc', userDoc)
-    if(!userDoc){
-        throw ApiError.BadRequest('User doesn\'t found');
-    }
-
-   userDoc.bookmarks.forEach(bookmark => {
-       if (String(bookmark.city) === cityId){
-        console.log('we have sity',String(bookmark.city), cityId)
-        bookmark.isActive = true;
-       }else{
-        bookmark.isActive = false;
-       }
-    })
-    await userDoc.save();
-
-    const updatedUser = await UserModel.findById(idUser).populate('bookmarks.city');
-    console.log("controller updateActiveBookmark reponse ====> ", updatedUser)
+    const updatedUser =  await userService.updateActiveBookmark(idUser, cityId);
     return res.json(updatedUser);
    }catch(err){
-    next(err) //we use error middleware 
+    next(err) 
    }
 }
 
 
 //delete
 export const deleteBookmark =  async(req, res, next) =>  {
-    console.log("we delete Bookmark")
-   //get one user
    const{cityId } = req.body;
-   
-//    const cityIdToRemove = mongoose.Types.ObjectId(cityId);
    const idUser = helpers.getId(req, res, next);
-   console.log(idUser)
-
-    //@to-do replace in service
    try{
-    const userDoc = await UserModel.findById(idUser);
-    console.log('userDoc', userDoc)
-    if(!userDoc){
-        throw ApiError.BadRequest('User doesn\'t found');
-    }
-
-    const isActiveDeletingCity =  userDoc.bookmarks.find(bookmark => String(bookmark.city) === cityId );
-  
-    await UserModel.updateOne(
-        { _id: idUser },
-        { $pull: { 'bookmarks': { city: cityId } }}
-    );
-
-    const updatedUser = await UserModel.findById(idUser).populate('bookmarks.city');
-
-    if(isActiveDeletingCity){
-        console.log('we deleted active bookmark')
-        updatedUser.bookmarks[0].isActive = true
-        await  updatedUser.save();
-        const newUpdated = await UserModel.findById(idUser).populate('bookmarks.city');
-        return res.json(newUpdated);
-    }
-
+    const updatedUser = await userService.deleteBookmark(idUser, cityId)
     return res.json(updatedUser);
    }catch(err){
-    next(err) //we use error middleware 
+    next(err) 
    }
 }
+
+
 
 
 export const getUsers =  async(req, res, next) =>  {

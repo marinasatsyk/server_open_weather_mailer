@@ -3,6 +3,7 @@ import CityModel from "../models/city-model.js";
 import { historyDataCreate } from "./weather-service.js";
 
 
+//create city
 export const findOrCreateCity = async (city, isHistory) => {
 
      console.log("city ishisotry", city, isHistory);
