@@ -69,7 +69,7 @@ export const activate =  async(req, res, next) =>  {
 export const refresh =  async(req, res, next) =>  {
     try{
         const {refreshToken} = req.cookies;
-        console.log('refreshToken', refreshToken);
+        console.log('❤️refreshToken ===***=== /refresh', refreshToken);
         
         const userData = await userService.refreshToken(refreshToken);
         console.log(userData)

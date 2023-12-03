@@ -33,10 +33,11 @@ export const validateAccessToken = async(token) => {
     }
 }
 export const validateRefreshToken = async(refreshToken) => {
-    console.log('we validate RERFRESH TOKEN')
+    console.log('❤️==========================> validateRefreshToken ')
     
     try{
         const userData = jwt.verify(refreshToken, REFRESH_TOKEN_KEY)
+        console.log('❤️jwt verify userData', userData)
         return userData;
 
     }catch(err){

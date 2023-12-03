@@ -13,7 +13,7 @@ export const authMiddleware = async(req, res, next) => {
         if(!accessToken){
             return next(ApiError.UnauthorizedError())
         }
-        console.log(accessToken)
+        console.log("access Token from middleware is:==========", accessToken)
 
         const userData = await  tokenService.validateAccessToken(accessToken);
 

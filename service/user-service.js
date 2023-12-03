@@ -51,7 +51,8 @@ export const registration = async (email, password, firstName, lastName, role = 
 
     console.log( userDto )
 
-    return{ ...tokens, user: userDto }
+     return{ ...tokens, user: userDto }
+  //  return{ ...tokens }
 }
 
 export const activate = async (activationLink) => {
@@ -94,20 +95,18 @@ export const login = async (email, password) => {
     await tokenService.saveToken(userDto.id,  tokens.refreshToken)
 
     console.log( 'from login userDto', userFullDto )
-    return{ ...tokens, user: userFullDto }
-   
+     return{ ...tokens, user: userFullDto }
+   // return{ ...tokens }
 }
 
 
 export const getUser = async (id) => {
     console.log('==========================>we have acces to getUser')
-   
-    const userDoc = await UserModel.findById(id);
-    const userDto = new UserFullDto(userDoc);
-
+    const userDoc = await UserModel.findById(id).populate('bookmarks.city');
     if(!userDoc){
       throw ApiError.BadRequest('User doesn\'t found')
     }
+    const userDto = new UserFullDto(userDoc);
     return userDto;
 }
 
@@ -120,15 +119,15 @@ export const logout = async (refreshToken) => {
 export const refreshToken = async (refreshToken) => {
     
     if(!refreshToken){
-        console.log('no token')
+        console.log('????no  refresh token')
         throw ApiError.UnauthorizedError(); //user doesn't have the token
     }
 
     const userData = await tokenService.validateRefreshToken(refreshToken);
     const tokenFromDb = await tokenService.findToken(refreshToken);
 
-    console.log('refreshToken', userData, tokenFromDb)
-    if(!userData ||  !tokenFromDb){
+    console.log('user service refreshToken', userData, tokenFromDb)
+    if(!userData || !tokenFromDb){
         throw ApiError.UnauthorizedError(); //user doesn't have the token
     }
    
