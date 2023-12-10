@@ -91,14 +91,15 @@ async function getWeatherData(start, end, lat, lon, type='hour') {
     return response.data; 
 }
   
-// Fonction récursive avec délai pour récupérer l'historique météorologique pour une année complète.
-// Data retourné par 7 jours, on itere 
+//recursive function with delay for get history weaher for full year   
+//global data sent by 7 days , we iterate  
+
 async function fetchYearlyWeather(startDateUnix, endDateUnix, lat, lon, type='hour') {
     const data = [];
 
     while (startDateUnix < endDateUnix) {
         console.log("while", convertUNIXtoISO(startDateUnix), convertUNIXtoISO(endDateUnix))
-        const endOfPeriodUnix = startDateUnix + 7 * 24 * 60 * 60; // Ajoute 7 jours en secondes UNIX
+        const endOfPeriodUnix = startDateUnix + 7 * 24 * 60 * 60; // Add 7 days in  UNIX
 
         const weatherData = await getWeatherData(
             startDateUnix,
@@ -118,13 +119,36 @@ async function fetchYearlyWeather(startDateUnix, endDateUnix, lat, lon, type='ho
         };
         data.push(convertedWeatherData.list);
 
-        startDateUnix = endOfPeriodUnix; // Met à jour la date de début pour la prochaine itération
+        // update start date before next request iteration
+        startDateUnix = endOfPeriodUnix;  
 
-        // Attendez 500 millisecondes avant de lancer la prochaine requête
+        // pause between requests
         await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    // À ce stade, "data" contient les données météorologiques pour chaque période de 7 jours
-    // Vous pouvez traiter ces données ou les renvoyer, selon vos besoins
+    // data contains weather data for each 7 days 
     return data;
+}
+
+export const getCurrentWheather =  async(lat, lon) => {
+    console.log("///////////////////////////////////////weather service current", lat, lon)
+
+    if(!lat || !lon){
+
+        return;
+    }
+
+    const response = await axios.get(process.env.URI_OPEN_WEATHER, {
+        params: {
+        lat,
+        lon,
+        units: "metric", // Celsius
+        appId:appId
+        }
+    }); 
+
+    console.log("weather service current", response.data)
+
+
+    return response.data; 
 }

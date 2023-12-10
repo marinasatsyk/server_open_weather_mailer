@@ -3,7 +3,8 @@ import chalk from "chalk";
 import { dateToTimestamp, convertUNIXtoISO } from '../helpers/helpers.js';
 import historicalWeatherModel from '../models/historical-weather-model.js';
 import mongoose from 'mongoose';
-
+import { getCurrentWheather } from '../service/weather-service.js';
+const  APPID = process.env.STUDENT_API_key;
 
 
 export const historyWeather = async (req, res, next) => {
@@ -84,13 +85,25 @@ export const historyWeather = async (req, res, next) => {
   
 export const currentWeather =  async(req, res, next) =>  {
     try{
-        // const users = await userService.getAllUsers();
-        // return res.json(users)
+       const {lat, lon } = req.body; 
+        console.log("*************************", req.body);
+
+    if(!lat || !lon){
+     const err = new Error('no data for get weather ');
+     throw err;
+    }
+
+     const currentWeather = await getCurrentWheather(lat, lon);
+
+       return res.json(currentWeather)
 
     }catch(err){
         next(err)
     }
 }
+
+
+
 export const forecastWeather =  async(req, res, next) =>  {
     try{
         // const users = await userService.getAllUsers();
@@ -100,6 +113,10 @@ export const forecastWeather =  async(req, res, next) =>  {
         next(err)
     }
 }
+
+
+
+
 export const climatWeather =  async(req, res, next) =>  {
     try{
         // const users = await userService.getAllUsers();

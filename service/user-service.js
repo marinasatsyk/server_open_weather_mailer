@@ -166,14 +166,21 @@ export const updateBookmarks = async (userDoc, city, isHistory, isActive) => {
         return String(bookmark.city._id);
     })
 
-    //verify if city doesn't exists
+    //verify if city doesn't exists yet
    const isFound = idsBokmarks.includes(String(cityDoc._id));
+   
+   //if no bookmarks the first will by active
+
+   if(!idsBokmarks.length){
+        isActive = true;
+    }
+
 
    if(!isFound){
         const newBookmark = {
                 city: cityDoc._id,
                 isFollowHistory: isHistory,
-                isActive
+                isActive 
         }
 
         //changecitybyDefault if isActive true

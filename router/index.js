@@ -43,8 +43,9 @@ router.get('/user', authMiddleware,   userController.getUser);
 
 //weather
 //#todo
+router.post('/weather/current',authMiddleware, weatherController.currentWeather);
+
 router.get('/user/city/historyweather',authMiddleware, weatherController.historyWeather);
-router.get('/current-weather',authMiddleware, weatherController.currentWeather);
 router.get('/forecast-weather',authMiddleware, weatherController.forecastWeather);
 router.get('/forecast-climat',authMiddleware, weatherController.climatWeather);
 
