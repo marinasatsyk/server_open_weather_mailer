@@ -153,7 +153,7 @@ export const deleteBookmark =  async(req, res, next) =>  {
 
 
 
-export const getUsers =  async(req, res, next) =>  {
+export const getAllUsers =  async(req, res, next) =>  {
     try{
         const users = await userService.getAllUsers();
         return res.json(users)

@@ -42,17 +42,23 @@ router.put('/user/:id', authMiddleware,   userController.update);
 router.get('/user', authMiddleware,   userController.getUser);
 
 //weather
-//#todo
 router.post('/weather/current',authMiddleware, weatherController.currentWeather);
+router.post('/weather/forecast/hourly',authMiddleware, weatherController.forecastWeatherHourly);
+router.post('/weather/forecast/daily',authMiddleware, weatherController.forecastWeatherDaily);
+router.post('/weather/pollution',authMiddleware, weatherController.pollutionWeather);
 
-router.get('/user/city/historyweather',authMiddleware, weatherController.historyWeather);
-router.get('/forecast-weather',authMiddleware, weatherController.forecastWeather);
+//#todo
+router.post('/weather/history',authMiddleware, weatherController.historyWeather);
+
+
 router.get('/forecast-climat',authMiddleware, weatherController.climatWeather);
 
-//access admin routes
-router.get('/users', authAdminMiddleware, userController.getUsers);
 
-//users routes
+//access admin routes
+router.get('admin/users', authAdminMiddleware, userController.getAllUsers);
+// router.post('admin/user/edit', authAdminMiddleware, userController.edit);
+// router.post('admin/user/deconnect', authAdminMiddleware, userController.deconnect);
+// router.delete('admin/user', authAdminMiddleware, userController.delete);
 
 
 

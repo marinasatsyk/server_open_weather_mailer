@@ -130,11 +130,10 @@ async function fetchYearlyWeather(startDateUnix, endDateUnix, lat, lon, type='ho
     return data;
 }
 
+
 export const getCurrentWheather =  async(lat, lon) => {
-    console.log("///////////////////////////////////////weather service current", lat, lon)
 
     if(!lat || !lon){
-
         return;
     }
 
@@ -149,6 +148,88 @@ export const getCurrentWheather =  async(lat, lon) => {
 
     console.log("weather service current", response.data)
 
+    return response.data; 
+}
+
+export const getLongForecastWheatherDaily =  async(lat, lon) => {
+
+    if(!lat || !lon){
+        return;
+    }
+
+    const response = await axios.get(process.env.URI_16DAYS_DAILY_FORECAST_WEATHER, {
+        params: {
+        lat,
+        lon,
+        units: "metric",// Celsius
+        cnt : 16, // by default 6, can by from 1 to 16 days for display data
+        appId:appId
+       }
+    }); 
+
+    console.log("weather long forecast", response.data)
 
     return response.data; 
 }
+
+export const getShortForecastWheatherHourly =  async(lat, lon) => {
+
+    if(!lat || !lon){
+        return;
+    }
+
+    const response = await axios.get(process.env.URI_4DAYS_HOURLY_FORECAST_WEATHER, {
+        params: {
+        lat,
+        lon,
+        units: "metric", // Celsius
+        appId:appId
+        }
+    }); 
+
+    console.log("weather long forecast", response.data)
+
+    return response.data; 
+}
+
+export const getPollutionWheather =  async(lat, lon) => {
+
+    if(!lat || !lon){
+        return;
+    }
+
+    const response = await axios.get(process.env.URI_POLLUTION_WEATHER, {
+        params: {
+        lat,
+        lon,
+        appId:appId
+        }
+    }); 
+
+    console.log("weather long forecast", response.data)
+
+    return response.data; 
+}
+
+
+export const getHistoryDataHourlyByRange =  async(cityId, start, end) => {
+    //TO REPLACE ALL
+
+    // if(!lat || !lon){
+    //     return;
+    // }
+
+    // const response = await axios.get(process.env.URI_4DAYS_HOURLY_FORECAST_WEATHER, {
+    //     params: {
+    //     lat,
+    //     lon,
+    //     units: "metric", // Celsius
+    //     appId:appId
+    //     }
+    // }); 
+
+    // console.log("weather long forecast", response.data)
+
+    // return response.data; 
+}
+
