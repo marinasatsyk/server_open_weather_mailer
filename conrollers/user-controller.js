@@ -152,15 +152,32 @@ export const deleteBookmark =  async(req, res, next) =>  {
 
 
 
-
+/**admin  */
 export const getAllUsers =  async(req, res, next) =>  {
     try{
         const users = await userService.getAllUsers();
+        console.log("users", users)
         return res.json(users)
     }catch(err){
         next(err)
     }
 }
+
+export const  create =  async(req, res, next) =>  {
+    try{
+        const errors = validationResult(req); //result from express validators
+        if(!errors.isEmpty()){
+            return next(ApiError.BadRequest('Validation error', errors.array()))
+        }
+        const {email, password, firstName, lastName, role} = req.body;
+        const userData = await userService.registration(email, password, firstName, lastName, role, true);
+        return res.json(userData); //sent in client side json object
+    }catch(err){
+        next(err)
+    }
+}
+
+
 
 
 export const logoutAll =  async(req, res, next) =>  {

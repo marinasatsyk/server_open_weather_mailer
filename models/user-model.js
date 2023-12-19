@@ -8,7 +8,13 @@ const UserSchema = new Schema({
     firstName: {type: String, trim: true, lowercase: true, required: true},
     lastName: {type: String, trim: true,lowercase: true, trim: true,required: true},
     createdDateTime: {type: Date, required: true},
-    role: {type: String, required: true, default: 'user'},
+    // role: {type: String, required: true, default: 'user'},
+    role: {
+        type: String,
+        enum : ['user','root'],
+        default: 'user',
+        required: true
+    },
     bookmarks: [
         {
             city: {type: Schema.Types.ObjectId, ref: 'City' }, 

@@ -13,7 +13,7 @@ import UserFullDto from "../dtos/user-full-dto.js";
 const SALTROUNDS = 10;
 const {SERVER_HOST, SERVER_PORT} = process.env;
 
-export const registration = async (email, password, firstName, lastName, role = 'user') => {
+export const registration = async (email, password, firstName, lastName, role = 'user', isAdminCreate = false) => {
     console.log(email, password, firstName, lastName, role);
     const candidate = await UserModel.findOne({email})
     if(candidate){
@@ -51,9 +51,10 @@ export const registration = async (email, password, firstName, lastName, role = 
 
     console.log( userDto )
 
-     return{ ...tokens, user: userDto }
-  //  return{ ...tokens }
+   return{ ...tokens, user:isAdminCreate ?userDoc : userDto }
 }
+
+
 
 export const activate = async (activationLink) => {
     const userDoc = await UserModel.findOne({activationLink});

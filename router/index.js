@@ -55,7 +55,9 @@ router.get('/forecast-climat',authMiddleware, weatherController.climatWeather);
 
 
 //access admin routes
-router.get('admin/users', authAdminMiddleware, userController.getAllUsers);
+router.get('/admin/users', authAdminMiddleware, userController.getAllUsers);
+router.post('/admin/user/create', authAdminMiddleware, userController.create);
+
 // router.post('admin/user/edit', authAdminMiddleware, userController.edit);
 // router.post('admin/user/deconnect', authAdminMiddleware, userController.deconnect);
 // router.delete('admin/user', authAdminMiddleware, userController.delete);
