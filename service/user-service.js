@@ -13,6 +13,8 @@ import UserFullDto from "../dtos/user-full-dto.js";
 const SALTROUNDS = 10;
 const {SERVER_HOST, SERVER_PORT} = process.env;
 
+
+//CREATE
 export const registration = async (email, password, firstName, lastName, role = 'user', isAdminCreate = false) => {
     console.log(email, password, firstName, lastName, role);
     const candidate = await UserModel.findOne({email})
@@ -99,6 +101,74 @@ export const login = async (email, password) => {
      return{ ...tokens, user: userFullDto }
    // return{ ...tokens }
 }
+
+//UPDATE
+export const update = async(isAdmin, userId, email,  firstName, lastName, role, isActivated)=> {
+   
+    //find user to update
+    const userDoc = await UserModel.findById(userId);
+    if(!userDoc){
+      throw ApiError.BadRequest('User doesn\'t found')
+    }
+   
+    //verification email exists if change email
+    if(userDoc.email !== email){
+        const candidate = await UserModel.findOne({email})
+        if(candidate){
+            throw ApiError.BadRequest('email exists');  
+        }
+    }
+
+    //only admin can update role&activation status
+    const dataToUpdate = isAdmin 
+    ? {
+        email,  
+        firstName, 
+        lastName, 
+        role, 
+        isActivated
+    }
+    : {
+        email,  
+        firstName, 
+        lastName, 
+        isActivated: userDoc.email !== email ? false : userDoc.isActivated
+    }
+
+    const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate);
+    
+    //if we change email and admin doesn't activate new email wi send
+    if(isAdmin && userDoc.email !== email && !isActivated || !isAdmin && userDoc.email !== email){
+        const activationLink = uuidv4();
+        //send confirm mail+ activation link
+        const mailService = new MailService();
+        await mailService.sendActivationMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/activate/${activationLink}`)
+    }
+
+    console.log("updated User", updatedUser);
+    return updatedUser;
+}
+
+
+//DELETE
+export const deleteUser = async (idUser) => {
+    console.log("deleteUser", idUser)
+    const userDoc = await UserModel.findById(idUser);
+
+    console.log('user finded fo delete', userDoc)
+    
+    if(!userDoc){
+        throw ApiError.BadRequest('User doesn\'t found');
+    }
+
+    const deletedUser =  UserModel.findByIdAndDelete(idUser);
+    console.log("deletedUser", deletedUser);
+   
+   return deletedUser
+}
+
+
+
 
 
 export const getUser = async (id) => {
@@ -247,10 +317,9 @@ export const deleteBookmark = async (idUser, cityId) => {
 }
 
 
-
-
-
 export const  getAllUsers = async () => {
     const users = UserModel.find();
     return users;
-  }
+}
+
+

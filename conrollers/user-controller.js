@@ -5,6 +5,10 @@ import { validationResult } from 'express-validator';
 import * as helpers from '../helpers/helpers.js';
 import mongoose from 'mongoose';
 
+
+//user CRUD
+
+//create
 export const  registration =  async(req, res, next) =>  {
     try{
         const errors = validationResult(req); //result from express validators
@@ -24,6 +28,73 @@ export const  registration =  async(req, res, next) =>  {
         next(err)
     }
 }
+
+//read
+
+export const getUser =  async(req, res, next) =>  {
+    try{
+        const id = helpers.getId(req, res, next);
+        const userData = await userService.getUser(id)
+        return res.json(userData); //sent in client side json object
+
+    }catch(err){
+        next(err) //we use error middleware 
+    }
+}
+
+//update user
+export const updateUser =  async(req, res, next) =>  {
+    const idHost = helpers.getId(req, res, next);
+    const {userId} = req.params;
+
+    try{
+        const userHost =  await userService.getUser(idHost);
+        const errors = validationResult(req); //result from express validators
+        
+        if(!errors.isEmpty()){
+            return next(ApiError.BadRequest('Validation error', errors.array()))
+        }
+
+        const { email, firstName, lastName, role, isActivated} = req.body;
+        const isAdmin = userHost.role === "root" ? true : false;
+
+        if(idHost !== userId && !isAdmin){
+            return next(ApiError.BadRequest('Unothorized to change other user data'))
+        }
+
+        const userUpdatedData =  await userService.update(isAdmin, userId, email, password, firstName, lastName, role, isActivated);
+
+        return res.json(userUpdatedData); //sent in client side json object
+    }catch(err){
+        next(err)
+    }
+ }
+ 
+ //delete user
+ export const deleteUser =  async(req, res, next) =>  {
+
+    const{id : userId } = req.params;
+
+    console.log("userId", userId, req.params)
+    const idHost = helpers.getId(req, res, next);
+    console.log("idHost", idHost)
+
+    try{  
+        const userHost =  await userService.getUser(idHost);
+        const isAdmin = userHost.role === "root" ? true : false;
+        console.log("isAdmin", isAdmin)
+        if(idHost !== userId && !isAdmin){
+            return next(ApiError.BadRequest('Unothorized to change other user data'))
+        }
+        
+        const deleteUser = await userService.deleteUser(userId);
+        return res.json({ success: true, message: 'User was deleted successefully', deletedUser: deleteUser });
+    }catch(err){
+     next(err) 
+    }
+ }
+ 
+
 
 export const login =  async(req, res, next) =>  {
     try{
@@ -82,16 +153,6 @@ export const refresh =  async(req, res, next) =>  {
     }
 }
 
-export const getUser =  async(req, res, next) =>  {
-    try{
-        const id = helpers.getId(req, res, next);
-        const userData = await userService.getUser(id)
-        return res.json(userData); //sent in client side json object
-
-    }catch(err){
-        next(err) //we use error middleware 
-    }
-}
 
 /**Bookmarks
  */
@@ -124,7 +185,7 @@ export const updateBookmarks =  async(req, res, next) =>  {
    }
 }
 
-//update
+//update one bookmark
 export const updateActiveBookmark =  async(req, res, next) =>  {
    const{cityId } = req.body;
    const idUser = helpers.getId(req, res, next);
@@ -180,6 +241,7 @@ export const  create =  async(req, res, next) =>  {
 
 
 
+
 export const logoutAll =  async(req, res, next) =>  {
     try{
         // const users = await userService.getAllUsers();
@@ -189,17 +251,17 @@ export const logoutAll =  async(req, res, next) =>  {
         next(err)
     }
 }
-export const update =  async(req, res, next) =>  {
-    try{
+// export const update =  async(req, res, next) =>  {
+//     try{
         
-        // let fields = 
-        // const users = await userService.getAllUsers();
-        // return res.json(users)
+//         // let fields = 
+//         // const users = await userService.getAllUsers();
+//         // return res.json(users)
 
-    }catch(err){
-        next(err)
-    }
-} 
+//     }catch(err){
+//         next(err)
+//     }
+// } 
 
 export const dashboard =  async(req, res, next) =>  {
     try{

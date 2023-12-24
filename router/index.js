@@ -6,14 +6,17 @@ import  { authAdminMiddleware, authMiddleware } from "../middlewares/auth-middle
 
 const  router = new Router();
 
-//authentication
+//#user crud
 router.post('/registration',
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({min:3, max: 32}).trim().escape(),
     userController.registration);
-
+router.get('/user', authMiddleware,   userController.getUser);
+router.put('/user/:id/update', authMiddleware,   userController.updateUser);
+router.delete('/user/:id/delete', authMiddleware, userController.deleteUser);
+    
+//authentication
 router.post('/login', userController.login);
-
 router.get('/validateAuth', authMiddleware);
 
 router.get('/activate/:link', userController.activate); //for activate account from mail
@@ -37,9 +40,7 @@ router.post('/user/bookmarks',authMiddleware,userController.updateBookmarks);
 router.put('/user/bookmarks',authMiddleware,userController.updateActiveBookmark);
 router.delete('/user/bookmarks',authMiddleware,userController.deleteBookmark);
 
-router.put('/user/:id', authMiddleware,   userController.update);
 
-router.get('/user', authMiddleware,   userController.getUser);
 
 //weather
 router.post('/weather/current',authMiddleware, weatherController.currentWeather);
@@ -47,10 +48,9 @@ router.post('/weather/forecast/hourly',authMiddleware, weatherController.forecas
 router.post('/weather/forecast/daily',authMiddleware, weatherController.forecastWeatherDaily);
 router.post('/weather/pollution',authMiddleware, weatherController.pollutionWeather);
 
+
 //#todo
 router.post('/weather/history',authMiddleware, weatherController.historyWeather);
-
-
 router.get('/forecast-climat',authMiddleware, weatherController.climatWeather);
 
 
