@@ -105,38 +105,72 @@ export const login = async (email, password) => {
 //UPDATE
 export const update = async(isAdmin, userId, email,  firstName, lastName, role, isActivated)=> {
    
+    console.log("new data:", 
+    "isAdmin", isAdmin,"userId", userId, 
+    "email", email, 
+    "firstName",  firstName, 
+    "lastName", lastName, 
+    "role", role,
+    "isActivated", isActivated)
     //find user to update
     const userDoc = await UserModel.findById(userId);
     if(!userDoc){
       throw ApiError.BadRequest('User doesn\'t found')
     }
-   
+    
+    console.log("*****update", userDoc)
+
     //verification email exists if change email
     if(userDoc.email !== email){
         const candidate = await UserModel.findOne({email})
         if(candidate){
             throw ApiError.BadRequest('email exists');  
         }
+        console.log("email change", email)
     }
 
     //only admin can update role&activation status
-    const dataToUpdate = isAdmin 
-    ? {
-        email,  
-        firstName, 
-        lastName, 
-        role, 
-        isActivated
-    }
-    : {
-        email,  
-        firstName, 
-        lastName, 
-        isActivated: userDoc.email !== email ? false : userDoc.isActivated
-    }
 
-    const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate);
+
+
+    // const dataToUpdate = isAdmin 
+    // ? {
+    //     email,  
+    //     firstName, 
+    //     lastName, 
+    //     role, 
+    //     isActivated
+    // }
+    // : {
+    //     email,  
+    //     firstName, 
+    //     lastName, 
+    //     isActivated: userDoc.email !== email ? false : userDoc.isActivated
+    // }
+
     
+    // const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate, { new: true });
+
+    const dataToUpdate = {};
+
+    // Mettre à jour uniquement les champs présents dans la requête
+    if (email) dataToUpdate.email = email;
+    if (firstName) dataToUpdate.firstName = firstName;
+    if (lastName) dataToUpdate.lastName = lastName;
+    if (isAdmin) dataToUpdate.role = role;
+    if (isAdmin) dataToUpdate.isActivated = isActivated;
+    if(!isAdmin && userDoc.email !== email) dataToUpdate.isActivated =  false;
+    
+    // Si aucun champ à mettre à jour, ne rien faire
+    if (Object.keys(dataToUpdate).length === 0) {
+        console.log("Aucun champ à mettre à jour");
+        return userDoc;
+    }
+    console.log("dataToUpdate", dataToUpdate);
+    const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate, { new: true });
+    console.log("updated User", updatedUser);
+
+
     //if we change email and admin doesn't activate new email wi send
     if(isAdmin && userDoc.email !== email && !isActivated || !isAdmin && userDoc.email !== email){
         const activationLink = uuidv4();
@@ -145,7 +179,7 @@ export const update = async(isAdmin, userId, email,  firstName, lastName, role, 
         await mailService.sendActivationMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/activate/${activationLink}`)
     }
 
-    console.log("updated User", updatedUser);
+    
     return updatedUser;
 }
 
@@ -177,6 +211,7 @@ export const getUser = async (id) => {
     if(!userDoc){
       throw ApiError.BadRequest('User doesn\'t found')
     }
+    
     const userDto = new UserFullDto(userDoc);
     return userDto;
 }

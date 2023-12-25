@@ -1,16 +1,22 @@
 //data transfer objects
 class UserFullDto  {
-     id;
+     _id;
+     firstName;
+     lastName;
      email;
      isActivated;
+     activationLink;
      createdDateTime;
      bookmarks;
      preferences;
      role;
       constructor(model){
-        this.id = model._id;
+        this._id = model._id;
+        this.firstName = model.firstName;
+        this.lastName = model.lastName;
         this.email = model.email;
         this.isActivated = model.isActivated;
+        this.activationLink = model.activationLink;
         this.createdDateTime = model.createdDateTime;
         this.bookmarks = model.bookmarks;
         this.preferences = model.preferences;

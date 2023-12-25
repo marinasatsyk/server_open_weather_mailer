@@ -1,18 +1,49 @@
 import { Router } from "express";
 import * as userController from "../conrollers/user-controller.js";
 import * as weatherController from "../conrollers/weather-controller.js";
-import {body, check} from 'express-validator';
+import {body, check, param } from 'express-validator';
 import  { authAdminMiddleware, authMiddleware } from "../middlewares/auth-middleware.js";
+import pkg from 'validator';
 
 const  router = new Router();
+
+const {stripLow, blacklist} = pkg;
 
 //#user crud
 router.post('/registration',
     body('email').isEmail().normalizeEmail(),
-    body('password').isLength({min:3, max: 32}).trim().escape(),
+    body('password').isLength({min:2, max: 32}).trim(),
+    body('firstName')
+        .notEmpty()
+        .isString()
+        .isLength({min:2, max: 32})
+        .trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
+
+    body('lastName')
+        .notEmpty()
+        .isLength({min:2, max: 32})
+        .trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
     userController.registration);
 router.get('/user', authMiddleware,   userController.getUser);
-router.put('/user/:id/update', authMiddleware,   userController.updateUser);
+
+router.put('/user/:id/update', 
+authMiddleware,  
+param("id").exists().isString().trim() ,
+body('dataForUpdate.email').isEmail().normalizeEmail(),
+
+body('dataForUpdate.firstName')
+.notEmpty()
+.isString()
+.isLength({min:2, max: 32})
+.trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
+
+body('dataForUpdate.lastName')
+.notEmpty()
+.isLength({min:2, max: 32})
+.trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
+
+userController.updateUser);
+
 router.delete('/user/:id/delete', authMiddleware, userController.deleteUser);
     
 //authentication
@@ -28,12 +59,12 @@ router.post('/logoutAll', userController.logoutAll); //delete all refreshTokens
 //#todo
 // router.post('/user/bookmarks', 
 //         authMiddleware,
-//         check('name').isString().trim().escape(),
-//         check('lat').isNumeric().escape(),
-//         check('lon').isNumeric().escape(),
-//         check('local_names').isObject,
-//         check('state').isString().trim().escape(),
-//         check('country').isString().trim().escape(),
+//         body('name').isString().trim().escape(),
+//         body('lat').isNumeric().escape(),
+//         body('lon').isNumeric().escape(),
+//         body('local_names').isObject,
+//         body('state').isString().trim().escape(),
+//         body('country').isString().trim().escape(),
 //         userController.updateBookmarks)
 
 router.post('/user/bookmarks',authMiddleware,userController.updateBookmarks);
@@ -56,7 +87,25 @@ router.get('/forecast-climat',authMiddleware, weatherController.climatWeather);
 
 //access admin routes
 router.get('/admin/users', authAdminMiddleware, userController.getAllUsers);
-router.post('/admin/user/create', authAdminMiddleware, userController.create);
+
+router.post('/admin/user/create',
+    body('email').isEmail().normalizeEmail(),
+    body('password').isLength({min:2, max: 32}).trim(),
+    body('firstName')
+        .notEmpty()
+        .isString()
+        .isLength({min:2, max: 32})
+        .trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
+
+    body('lastName')
+        .notEmpty()
+        .isLength({min:2, max: 32})
+        .trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
+    authAdminMiddleware, 
+    userController.create);
+
+router.get('/admin/user/:id', authMiddleware,   userController.getUser);
+
 
 // router.post('admin/user/edit', authAdminMiddleware, userController.edit);
 // router.post('admin/user/deconnect', authAdminMiddleware, userController.deconnect);

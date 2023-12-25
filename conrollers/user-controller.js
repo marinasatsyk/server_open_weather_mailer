@@ -1,7 +1,7 @@
 import { ApiError } from '../exceptions/api-error.js';
 import UserModel from '../models/user-model.js';
 import * as  userService from '../service/user-service.js';
-import { validationResult } from 'express-validator';
+import { validationResult, param  } from 'express-validator';
 import * as helpers from '../helpers/helpers.js';
 import mongoose from 'mongoose';
 
@@ -32,9 +32,21 @@ export const  registration =  async(req, res, next) =>  {
 //read
 
 export const getUser =  async(req, res, next) =>  {
+    const idHost = helpers.getId(req, res, next);
+    const {id : userId} = req.params;
+    
     try{
-        const id = helpers.getId(req, res, next);
-        const userData = await userService.getUser(id)
+        const userHost =  await userService.getUser(idHost);
+        const isAdmin = userHost.role === "root" ? true : false;
+        if(!isAdmin || isAdmin&&!userId){
+            return res.json(userHost);
+        }
+
+        if(idHost !== userId && !isAdmin){
+                return next(ApiError.BadRequest('Unothorized to get other user data'))
+        }
+
+        const userData = await userService.getUser(userId);
         return res.json(userData); //sent in client side json object
 
     }catch(err){
@@ -42,10 +54,11 @@ export const getUser =  async(req, res, next) =>  {
     }
 }
 
+
 //update user
 export const updateUser =  async(req, res, next) =>  {
     const idHost = helpers.getId(req, res, next);
-    const {userId} = req.params;
+    const {id : userId} = req.params;
 
     try{
         const userHost =  await userService.getUser(idHost);
@@ -55,16 +68,26 @@ export const updateUser =  async(req, res, next) =>  {
             return next(ApiError.BadRequest('Validation error', errors.array()))
         }
 
-        const { email, firstName, lastName, role, isActivated} = req.body;
+        const { email, firstName, lastName, role, isActivated} = req.body.dataForUpdate;
+       
+
         const isAdmin = userHost.role === "root" ? true : false;
+        
+        // console.log("new controller check:", 
+        // "isAdmin", isAdmin,"userId", userId, 
+        // "email", email, 
+        // "firstName",  firstName, 
+        // "lastName", lastName, 
+        // "role", role,
+        // "isActivated", isActivated)
 
         if(idHost !== userId && !isAdmin){
             return next(ApiError.BadRequest('Unothorized to change other user data'))
         }
 
-        const userUpdatedData =  await userService.update(isAdmin, userId, email, password, firstName, lastName, role, isActivated);
+        const userUpdatedData =  await userService.update(isAdmin, userId, email, firstName, lastName, role, isActivated);
 
-        return res.json(userUpdatedData); //sent in client side json object
+         return res.json(userUpdatedData); //sent in client side json object
     }catch(err){
         next(err)
     }
