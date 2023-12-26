@@ -36,15 +36,17 @@ app.use(cors({
 app.use('/api', router);
 
 app.use(errorMiddleware);
+
+
 const start = async() => {
      try{
-        MongoDBClient.initialize()
+       await MongoDBClient.initialize()
 
         app.listen(PORT, () => {
             console.log(`✅SERVER ready on : http://${SERVER_HOST}:${PORT}`); 
         })
      }catch(err){
-        console.error('Erreur de connexion ', err.message);     }
+        console.error('Erreur de connexion ', err.message); }
 }
 
 start();

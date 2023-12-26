@@ -163,12 +163,14 @@ export const activate =  async(req, res, next) =>  {
 export const refresh =  async(req, res, next) =>  {
     try{
         const {refreshToken} = req.cookies;
-        console.log('❤️refreshToken ===***=== /refresh', refreshToken);
+        console.log('❤️refreshToken ===START refresh***=== /refresh', refreshToken);
         
         const userData = await userService.refreshToken(refreshToken);
-        console.log(userData)
+
+        console.log("====****continue in controller refresh**====", "old refresh:", refreshToken, "new refresh:", userData.refreshToken)
         
         res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true}) //for clientSide cookies refreshToken
+       
         return res.json(userData); //sent in client side json object
 
     }catch(err){

@@ -232,16 +232,23 @@ export const refreshToken = async (refreshToken) => {
     const userData = await tokenService.validateRefreshToken(refreshToken);
     const tokenFromDb = await tokenService.findToken(refreshToken);
 
-    console.log('user service refreshToken', userData, tokenFromDb)
+    console.log('❤️❤️❤️!!!!!!!!===> user service refreshToken', 
+    "refresh token from front", refreshToken,  
+    "validate refresh Token", userData,
+    "token found in db", tokenFromDb);
+
+
     if(!userData || !tokenFromDb){
         throw ApiError.UnauthorizedError(); //user doesn't have the token
     }
+
    
     const user = await UserModel.findById(userData.id) //user's info can change, so we use the current info db
 
     const userDto = new UserDto(user);
     const userFullDto = new UserFullDto(user);
 
+    //??we generate both???
     const tokens = await tokenService.generateToken({...userDto});
     console.log('😍😍 from refresh', tokens)
 

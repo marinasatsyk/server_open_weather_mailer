@@ -19,6 +19,20 @@ export const generateToken = async(payload) => {
     }
 }
 
+export const reGenerateOneToken = async(payload) => {
+    console.log("payload", payload)
+    const accessToken = jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '30s'});
+
+    console.log('from generateToken',   accessToken )
+    
+    return {
+        accessToken,
+        refreshToken
+    }
+}
+
+
+
 export const validateAccessToken = async(token) => {
 
     try{
@@ -59,6 +73,7 @@ export const saveToken = async(userId, refreshToken) => {
         tokenData.refreshToken = refreshToken // we re-recorde refreshToken
         return tokenData.save();
     }
+    
     //if first time loggin
     const token = await TokenModel.create({user: userId, refreshToken});
    console.log('token first One', token)
@@ -76,6 +91,7 @@ export const removeToken = async(refreshToken) => {
 }
 
 export const findToken = async(refreshToken) => {
+    console.log("find token", refreshToken)
     const tokenData = await TokenModel.findOne({refreshToken});
     return tokenData;
 }
