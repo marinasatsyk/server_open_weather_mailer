@@ -58,7 +58,7 @@ export const getUser =  async(req, res, next) =>  {
 //update user
 export const updateUser =  async(req, res, next) =>  {
     const idHost = helpers.getId(req, res, next);
-    const {id : userId} = req.params;
+    let {id : userId} = req.params;
 
     try{
         const userHost =  await userService.getUser(idHost);
@@ -73,6 +73,14 @@ export const updateUser =  async(req, res, next) =>  {
 
         const isAdmin = userHost.role === "root" ? true : false;
         
+        console.log("new controller check:", 
+        "isAdmin", isAdmin,"userId", userId, 
+        "email", email, 
+        "firstName",  firstName, 
+        "lastName", lastName, 
+        "role", role,
+        "isActivated", isActivated,
+        "idHost",idHost)
         // console.log("new controller check:", 
         // "isAdmin", isAdmin,"userId", userId, 
         // "email", email, 
@@ -81,9 +89,14 @@ export const updateUser =  async(req, res, next) =>  {
         // "role", role,
         // "isActivated", isActivated)
 
-        if(idHost !== userId && !isAdmin){
-            return next(ApiError.BadRequest('Unothorized to change other user data'))
-        }
+        // if(String(idHost) !== String(userId) && !isAdmin){
+        //     console.log("idHost", String(idHost), "(userId)", String(userId))
+        //     return next(ApiError.BadRequest('Unothorized to change other user data'))
+        // }
+
+        userId =  isAdmin ? userId : idHost;
+
+        console.log("userId", userId, idHost)
 
         const userUpdatedData =  await userService.update(isAdmin, userId, email, firstName, lastName, role, isActivated);
 
@@ -94,9 +107,9 @@ export const updateUser =  async(req, res, next) =>  {
  }
  
  //delete user
- export const deleteUser =  async(req, res, next) =>  {
+export const deleteUser =  async(req, res, next) =>  {
 
-    const{id : userId } = req.params;
+    let {id : userId } = req.params;
 
     console.log("userId", userId, req.params)
     const idHost = helpers.getId(req, res, next);
@@ -106,16 +119,16 @@ export const updateUser =  async(req, res, next) =>  {
         const userHost =  await userService.getUser(idHost);
         const isAdmin = userHost.role === "root" ? true : false;
         console.log("isAdmin", isAdmin)
-        if(idHost !== userId && !isAdmin){
-            return next(ApiError.BadRequest('Unothorized to change other user data'))
-        }
         
+        if(!isAdmin){
+            userId = idHost;
+        }
         const deleteUser = await userService.deleteUser(userId);
         return res.json({ success: true, message: 'User was deleted successefully', deletedUser: deleteUser });
     }catch(err){
      next(err) 
     }
- }
+}
  
 
 

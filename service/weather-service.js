@@ -167,7 +167,6 @@ export const getLongForecastWheatherDaily =  async(lat, lon) => {
        }
     }); 
 
-    console.log("weather long forecast", response.data)
 
     return response.data; 
 }
@@ -187,7 +186,6 @@ export const getShortForecastWheatherHourly =  async(lat, lon) => {
         }
     }); 
 
-    console.log("weather long forecast", response.data)
 
     return response.data; 
 }
@@ -206,7 +204,6 @@ export const getPollutionWheather =  async(lat, lon) => {
         }
     }); 
 
-    console.log("weather long forecast", response.data)
 
     return response.data; 
 }

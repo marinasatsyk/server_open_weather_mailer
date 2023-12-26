@@ -24,6 +24,9 @@ class MailService{
             html:
             `
             <div>
+                <div>Hello, this is a  test of application for a student project</div>
+                <div>I'm sorry to bother you. Just ignore this email</div>
+                <div>Happy New Year, have a nice day</div>
                 <h1>For activation  your account click here</h1>
                 <a href='${link}'>${link}</a>
             </div>
