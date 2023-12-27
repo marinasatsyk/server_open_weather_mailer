@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { ApiError } from '../exceptions/api-error.js';
+import historicalWeatherModel from '../models/historical-weather-model.js';
+import chalk from 'chalk';
 
 export const getId = (req, res, next) =>   {
     const {refreshToken} = req.cookies;
@@ -72,20 +74,40 @@ export function convertDateToUnixTimestamp(date) {
   return Math.floor(date.getTime() / 1000);
 }  
 
-export const  getUnixTimestampsYearRange = ()=> {
-  // Date courante
+
+export const  getUnixTimestampsYearRange = async(cityId)=> {
+  //search if there is record for the City
+  const mostRecentDocument = await historicalWeatherModel
+      .findOne({city: cityId})
+      .sort({ dt: 'desc' }) // Trie par ordre décroissant sur le champ dt
+      .exec();
+
+  console.log(chalk.yellow("mostRecentDocument", mostRecentDocument))
+
+  let startDateUnix;
+  
+  //todaty part
   const currentDate = new Date();
+  const todayDate = new Date(currentDate);
 
-  // Date d'il y a un an
-  const startDate = new Date(currentDate);
-  startDate.setDate(currentDate.getDate() + 1); // Ajoute un jour
-  startDate.setFullYear(currentDate.getFullYear() - 1); // Soustrait un an
-  startDate.setHours(0, 0, 0, 0); // Fixe l'heure à 00h00m00s
+  if(mostRecentDocument){
+    //start
+    startDateUnix = mostRecentDocument.dt;
+  }else{
+    //start date: today +1d - 1y
+    todayDate.setDate(currentDate.getDate() + 1); // Add 1d
+    todayDate.setFullYear(currentDate.getFullYear() - 1); // substract 1 year
+    todayDate.setHours(0, 0, 0, 0); // Fixe time  00h00m00s
+   
+    // Conversion in timestamps Unix
+    startDateUnix = convertDateToUnixTimestamp(todayDate);
+  }
 
- // Conversion en timestamps Unix
- const startDateUnix = convertDateToUnixTimestamp(startDate);
- const endDateUnix = convertDateToUnixTimestamp(currentDate) ;
+  //end date is allways today
+  const endDateUnix = convertDateToUnixTimestamp(currentDate);
 
- return { startDate: startDateUnix, endDate: endDateUnix };
+  console.log(chalk.yellow("dates from getUnixTimestamp", convertUNIXtoISO(startDateUnix), convertUNIXtoISO(endDateUnix)))
+
+  return {  startDateUnix,  endDateUnix };
 }
 

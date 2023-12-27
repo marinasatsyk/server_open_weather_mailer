@@ -80,8 +80,9 @@ router.post('/weather/forecast/daily',authMiddleware, weatherController.forecast
 router.post('/weather/pollution',authMiddleware, weatherController.pollutionWeather);
 
 
-//#todo
 router.post('/weather/history',authMiddleware, weatherController.historyWeather);
+
+//#todo
 router.get('/forecast-climat',authMiddleware, weatherController.climatWeather);
 
 

@@ -15,7 +15,9 @@ export const findOrCreateCity = async (city, isHistory) => {
     if(candidateCity){
         console.log('candidateCity exists', candidateCity)
         //we have cityObject but there is not history data in db
-        if(isHistory&& !candidateCity.isHistory){
+
+        // if(isHistory&& !candidateCity.isHistory){
+        if(isHistory){
             //we search and save history
            await historyDataCreate(candidateCity._id, candidateCity.lat, candidateCity.lon);
            //we change status of history of current city

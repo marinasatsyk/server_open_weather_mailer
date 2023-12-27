@@ -312,7 +312,7 @@ export const updateBookmarks = async (userDoc, city, isHistory, isActive) => {
 }
 
 //update
-export const updateActiveBookmark = async (idUser, cityId) => {
+export const updateActiveBookmark = async (idUser, cityId, isHistory) => {
 
     const userDoc = await UserModel.findById(idUser);
     if(!userDoc){
@@ -320,16 +320,35 @@ export const updateActiveBookmark = async (idUser, cityId) => {
     }
    userDoc.bookmarks.forEach(bookmark => {
        if (String(bookmark.city) === cityId){
-        bookmark.isActive = true;
+            bookmark.isActive = true;
+            if(isHistory){bookmark.isFollowHistory = isHistory}
        }else{
         bookmark.isActive = false;
        }
-    })
+    });
+
+    if(isHistory){
+        const candidateCity = await CityModel.findById(cityId);  
+
+        if(candidateCity){
+            console.log('candidateCity exists', candidateCity)
+            
+            //we search and save history
+            await historyDataCreate(candidateCity._id, candidateCity.lat, candidateCity.lon);
+            //we change status of history of current city
+            candidateCity.isHistory =  true;
+            //we save candidate changes
+            await candidateCity.save();
+        };
+    }
     await userDoc.save();
     const updatedUser = await UserModel.findById(idUser).populate('bookmarks.city');
 
     return updatedUser;
 }
+
+
+
 
 
 export const deleteBookmark = async (idUser, cityId) => {
@@ -350,7 +369,9 @@ export const deleteBookmark = async (idUser, cityId) => {
 
     if(isActiveDeletingCity){
         
+       if(updatedUser.bookmarks.length) { 
         updatedUser.bookmarks[0].isActive = true
+       }
         await  updatedUser.save();
         const newUpdated = await UserModel.findById(idUser).populate('bookmarks.city');
         return newUpdated;

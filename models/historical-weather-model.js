@@ -3,7 +3,7 @@ import  {Schema, model} from 'mongoose';
 
 const historicalWeatherSchema = new Schema(
     {
-        dt: { type: Date,  required: true },
+        dt: { type: Number, required: true }, //format unix
         main: {
           temp: {type: Number, required: true},
           feels_like: {type: Number, required: true},

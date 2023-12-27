@@ -206,7 +206,9 @@ export const updateBookmarks =  async(req, res, next) =>  {
     console.log("we update bookmarks!!!")
    //get one user
    const{city, isHistory, isActive } = req.body;
+
    const idUser = helpers.getId(req, res, next);
+   
    try{
         const userDoc = await UserModel.findById(idUser);
         
