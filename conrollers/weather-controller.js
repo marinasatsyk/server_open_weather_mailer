@@ -19,7 +19,7 @@ export const historyWeather = async (req, res, next) => {
         throw ApiError.BadRequest('parametres are incorrecte, can not  get historical weather')
     }
    
-    const cityCandidat = await CityModel.findById(cityId);
+    const  cityCandidat = await CityModel.findById(cityId);
    
     if(!cityCandidat){
         throw ApiError.BadRequest("city doesn't exists in data base")
@@ -28,16 +28,32 @@ export const historyWeather = async (req, res, next) => {
     try {
         console.log("cityCandidat.id", cityCandidat);
         console.log(chalk.yellow("lat lon type appid", startDate, endDate, cityId))
-        
+
         const dataHisotricalWeather = await   historicalWeatherModel.find({
             "city": cityCandidat._id,
             "dt": { $gte: startDate, $lte: endDate }
           })
           .sort({ "dt": 1 })
         ;
-        console.log("dataHisotricalWeather", dataHisotricalWeather.length, dataHisotricalWeather[0]);
 
-        return res.json(dataHisotricalWeather);
+       const coord = {
+            lat: cityCandidat.lat,
+            lon: cityCandidat.lon
+        }
+        
+        const modifiedCityCandidat = {
+            ...cityCandidat.toObject(),
+            coord: coord,
+          };
+
+        const dataForSend = {
+            list: dataHisotricalWeather,
+            city: modifiedCityCandidat
+        }
+        console.log("dataHisotricalWeather", cityCandidat);
+        // console.log("dataHisotricalWeather", dataHisotricalWeather.length, dataHisotricalWeather[0]);
+
+        return res.json(dataForSend);
     } catch (error) {
         next(error)        
     }

@@ -261,7 +261,6 @@ export const getShortForecastWheatherHourly =  async(lat, lon) => {
         }
     }); 
 
-
     return response.data; 
 }
 
@@ -285,11 +284,14 @@ export const getPollutionWheather =  async(lat, lon) => {
 
 
 export const getHistoryDataHourlyByRange =  async(cityId, start, end) => {
+    
  const response = await   historicalWeatherModel.find({
     "city": mongoose.Types.ObjectId(cityId),
     "dt": { $gte: start, $lte: end }
   })
+  .populate('city')
   .sort({ "dt": 1 })
+
 
     return response.data; 
 }
