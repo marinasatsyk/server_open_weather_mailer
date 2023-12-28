@@ -80,7 +80,31 @@ router.post('/weather/forecast/daily',authMiddleware, weatherController.forecast
 router.post('/weather/pollution',authMiddleware, weatherController.pollutionWeather);
 
 
-router.post('/weather/history',authMiddleware, weatherController.historyWeather);
+router.post('/weather/history',authMiddleware,
+body('startDate')
+    .notEmpty()
+    .isNumeric()
+    .trim()
+    .custom(value =>{ 
+        const date = new Date(value * 1000); // Convertir le timestamp en millisecondes
+        return !isNaN(date.getTime());
+    })
+    .withMessage('The field timestamp isn\'t  timestamp valid.'),
+body('endDate')
+    .notEmpty()
+    .isNumeric()
+    .trim()
+    .custom(value =>{ 
+        const date = new Date(value * 1000); // Convertir le timestamp en millisecondes
+        return !isNaN(date.getTime());
+    })
+    .withMessage('The field timestamp isn\'t  timestamp valid.'),
+body('cityId')
+    .notEmpty()
+    .isString()
+    .trim()
+    .withMessage('The field city id is not valid.'),
+ weatherController.historyWeather);
 
 //#todo
 router.get('/forecast-climat',authMiddleware, weatherController.climatWeather);

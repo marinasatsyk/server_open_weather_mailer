@@ -208,7 +208,7 @@ export const updateBookmarks =  async(req, res, next) =>  {
    const{city, isHistory, isActive } = req.body;
 
    const idUser = helpers.getId(req, res, next);
-   
+
    try{
         const userDoc = await UserModel.findById(idUser);
         
@@ -227,11 +227,11 @@ export const updateBookmarks =  async(req, res, next) =>  {
 
 //update one bookmark
 export const updateActiveBookmark =  async(req, res, next) =>  {
-   const{cityId } = req.body;
+   const{cityId, isHistory } = req.body;
    const idUser = helpers.getId(req, res, next);
 
    try{
-    const updatedUser =  await userService.updateActiveBookmark(idUser, cityId);
+    const updatedUser =  await userService.updateActiveBookmark(idUser, cityId, isHistory);
     return res.json(updatedUser);
    }catch(err){
     next(err) 

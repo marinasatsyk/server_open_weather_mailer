@@ -9,6 +9,7 @@ import * as tokenService from './token-service.js';
 import UserDto from '../dtos/user-dto.js';
 import { ApiError } from "../exceptions/api-error.js";
 import UserFullDto from "../dtos/user-full-dto.js";
+import { historyDataCreate } from "./weather-service.js";
 
 const SALTROUNDS = 10;
 const {SERVER_HOST, SERVER_PORT} = process.env;
@@ -331,7 +332,7 @@ export const updateActiveBookmark = async (idUser, cityId, isHistory) => {
         const candidateCity = await CityModel.findById(cityId);  
 
         if(candidateCity){
-            console.log('candidateCity exists', candidateCity)
+            console.log('UPDATED HISTORY status candidateCity exists', candidateCity)
             
             //we search and save history
             await historyDataCreate(candidateCity._id, candidateCity.lat, candidateCity.lon);

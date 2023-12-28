@@ -4,6 +4,7 @@ import { dateToTimestamp, convertUNIXtoISO, getUnixTimestampsYearRange } from '.
 import historicalWeatherModel from '../models/historical-weather-model.js';
 import mongoose from 'mongoose';
 import axios from 'axios';
+import CityModel from '../models/city-model.js';
 const appId = process.env.STUDENT_API_key;
 
 
@@ -284,23 +285,12 @@ export const getPollutionWheather =  async(lat, lon) => {
 
 
 export const getHistoryDataHourlyByRange =  async(cityId, start, end) => {
-    //TO REPLACE ALL
+ const response = await   historicalWeatherModel.find({
+    "city": mongoose.Types.ObjectId(cityId),
+    "dt": { $gte: start, $lte: end }
+  })
+  .sort({ "dt": 1 })
 
-    // if(!lat || !lon){
-    //     return;
-    // }
-
-    // const response = await axios.get(process.env.URI_4DAYS_HOURLY_FORECAST_WEATHER, {
-    //     params: {
-    //     lat,
-    //     lon,
-    //     units: "metric", // Celsius
-    //     appId:appId
-    //     }
-    // }); 
-
-    // console.log("weather long forecast", response.data)
-
-    // return response.data; 
+    return response.data; 
 }
 

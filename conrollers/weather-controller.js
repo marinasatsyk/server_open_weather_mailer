@@ -3,30 +3,44 @@ import chalk from "chalk";
 import { dateToTimestamp, convertUNIXtoISO } from '../helpers/helpers.js';
 import historicalWeatherModel from '../models/historical-weather-model.js';
 import mongoose from 'mongoose';
-import { getCurrentWheather, getLongForecastWheatherDaily, getPollutionWheather, getShortForecastWheatherHourly } from '../service/weather-service.js';
+import { getCurrentWheather, getHistoryDataHourlyByRange, getLongForecastWheatherDaily, getPollutionWheather, getShortForecastWheatherHourly } from '../service/weather-service.js';
+import CityModel from '../models/city-model.js';
 const  APPID = process.env.STUDENT_API_key;
 
 
 export const historyWeather = async (req, res, next) => {
-    console.log("hello", req.url);
-    const appId = process.env.STUDENT_API_key;
-    const start = dateToTimestamp(req.body.start); //format string "01/01/2022, date strictement 1 an avant de requete"
-    const end = dateToTimestamp(req.body?.end);
-    /**
-     * latitude d'une ville
-     * longitude d'une ville
-     * type ex hourly pour chaque
-     */
-    const {lat, lon, type, cityId} = req.body; 
-    console.log(chalk.yellow("lat lon type appid"), lat,  lon,  type,  appId)
-    console.log('in hourlyweather avant axios')
-        
-    try {
-
-    } catch (error) {
-            next(err)        
+    const {startDate, endDate, cityId} = req.body;
+   
+    // const start = dateToTimestamp(req.body.start); //format string "01/01/2022, date strictement 1 an avant de requete"
+    // const end = dateToTimestamp(req.body?.end);
+   
+    //verif if dateTimestamp
+    if(!startDate || !endDate || !cityId){
+        throw ApiError.BadRequest('parametres are incorrecte, can not  get historical weather')
     }
-  
+   
+    const cityCandidat = await CityModel.findById(cityId);
+   
+    if(!cityCandidat){
+        throw ApiError.BadRequest("city doesn't exists in data base")
+    }
+ 
+    try {
+        console.log("cityCandidat.id", cityCandidat);
+        console.log(chalk.yellow("lat lon type appid", startDate, endDate, cityId))
+        
+        const dataHisotricalWeather = await   historicalWeatherModel.find({
+            "city": cityCandidat._id,
+            "dt": { $gte: startDate, $lte: endDate }
+          })
+          .sort({ "dt": 1 })
+        ;
+        console.log("dataHisotricalWeather", dataHisotricalWeather.length, dataHisotricalWeather[0]);
+
+        return res.json(dataHisotricalWeather);
+    } catch (error) {
+        next(error)        
+    }
 }
 
   
