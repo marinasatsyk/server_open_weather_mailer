@@ -72,7 +72,6 @@ router.put('/user/bookmarks',authMiddleware,userController.updateActiveBookmark)
 router.delete('/user/bookmarks',authMiddleware,userController.deleteBookmark);
 
 
-
 //weather
 router.post('/weather/current',authMiddleware, weatherController.currentWeather);
 router.post('/weather/forecast/hourly',authMiddleware, weatherController.forecastWeatherHourly);
@@ -106,6 +105,12 @@ body('cityId')
     .withMessage('The field city id is not valid.'),
  weatherController.historyWeather);
 
+
+ router.post('/weather/history/available', body('cityId')
+    .notEmpty()
+    .isString()
+    .trim()
+    .withMessage('The field city id is not valid.'), weatherController.historyAvailable);
 //#todo
 router.get('/forecast-climat',authMiddleware, weatherController.climatWeather);
 

@@ -60,7 +60,44 @@ export const historyWeather = async (req, res, next) => {
 }
 
   
+export const historyAvailable = async(req, res, next) => {
+    const { cityId} = req.body;
+   
+    if(!cityId){
+        throw ApiError.BadRequest('parametres are incorrecte, can not  get historical weather')
+    }
+   
+    try{
+        const  cityCandidat = await CityModel.findById(cityId);
+   
+        if(!cityCandidat){
+            throw ApiError.BadRequest("city doesn't exists in data base");
+        }
+    
+    
+        const dataHisotricalWeather = await historicalWeatherModel.findOne(
+            { 'city': cityCandidat._id }, 
+            {}, 
+            { sort: { 'dt': 1 }}
+        )
+        
 
+        const finded = new Date(dataHisotricalWeather.dt * 1000);
+        console.log(finded);
+
+        const dataForReq = {
+            dt: dataHisotricalWeather.dt,
+            city: cityCandidat._id,
+            city_name: cityCandidat.name
+        }
+
+        console.log("dataForReq", dataForReq)
+        return res.json(dataForReq)
+    
+    }catch(err){
+        next(err)
+    }
+};
   
 export const currentWeather =  async(req, res, next) =>  {
     try{
@@ -142,11 +179,9 @@ export const pollutionWeather =  async(req, res, next) =>  {
 
 
 
-
+//TODO
 export const climatWeather =  async(req, res, next) =>  {
     try{
-        // const users = await userService.getAllUsers();
-        // return res.json(users)
 
     }catch(err){
         next(err)

@@ -45,7 +45,7 @@ export const historyDataCreate = async(cityId, lat, lon) => {
             );
            
             //we save all  req from res openweather
-            Promise.all(weatherData.list.map(async(dataItem)=> {
+            await  Promise.all(weatherData.list.map(async(dataItem)=> {
               //could we verify here records? 
                 const existingRecord = await historicalWeatherModel.findOne({
                     dt: dataItem.dt, 
@@ -87,7 +87,7 @@ export const historyDataCreate = async(cityId, lat, lon) => {
                 }
             }))
         }))
-
+        console.log(chalk.bgGreenBright("fin creating data historical"))
     }catch(err){
         console.error(err)
     }
@@ -284,7 +284,7 @@ export const getPollutionWheather =  async(lat, lon) => {
 
 
 export const getHistoryDataHourlyByRange =  async(cityId, start, end) => {
-    
+
  const response = await   historicalWeatherModel.find({
     "city": mongoose.Types.ObjectId(cityId),
     "dt": { $gte: start, $lte: end }

@@ -90,17 +90,26 @@ export const login = async (email, password) => {
         throw ApiError.BadRequest('Email was not activated')
     }
 
+    //update historical data
+
+    console.log("userDoc dans login", userDoc)    
+    const citiesIdToUpdate = userDoc.bookmarks.filter((bookmark) => bookmark.isFollowHistory === true);
+
+    console.log("❤️❤️❤️❤️❤️❤️ list of cities to update", citiesIdToUpdate)
+
+
+   await Promise.all(citiesIdToUpdate.map(async(bookmark)  => {
+        await historyDataCreate(bookmark.city._id, bookmark.city.lat, bookmark.city.lon)
+    }))
+
+
     const userFullDto = new UserFullDto(userDoc);
     const userDto = new UserDto(userDoc);
-    console.log("userFullDtosuivant", userFullDto)
     const tokens = await tokenService.generateToken({...userDto});
-    console.log('😍😍 from login', tokens)
 
     await tokenService.saveToken(userDto.id,  tokens.refreshToken)
 
-    console.log( 'from login userDto', userFullDto )
      return{ ...tokens, user: userFullDto }
-   // return{ ...tokens }
 }
 
 //UPDATE
@@ -131,26 +140,6 @@ export const update = async(isAdmin, userId, email,  firstName, lastName, role, 
     }
 
     //only admin can update role&activation status
-
-
-
-    // const dataToUpdate = isAdmin 
-    // ? {
-    //     email,  
-    //     firstName, 
-    //     lastName, 
-    //     role, 
-    //     isActivated
-    // }
-    // : {
-    //     email,  
-    //     firstName, 
-    //     lastName, 
-    //     isActivated: userDoc.email !== email ? false : userDoc.isActivated
-    // }
-
-    
-    // const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate, { new: true });
 
     const dataToUpdate = {};
 
@@ -213,6 +202,8 @@ export const getUser = async (id) => {
       throw ApiError.BadRequest('User doesn\'t found')
     }
     
+
+
     const userDto = new UserFullDto(userDoc);
     return userDto;
 }
