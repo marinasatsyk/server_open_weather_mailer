@@ -19,7 +19,7 @@ export const  registration =  async(req, res, next) =>  {
         
         const {email, password, firstName, lastName} = req.body;
 
-        const userData = await userService.registration(email, password, firstName, lastName);
+        const userData = await userService.registration(req, email, password, firstName, lastName);
         
         //for clientSide cookies refreshToken
         res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true}) 
@@ -70,33 +70,20 @@ export const updateUser =  async(req, res, next) =>  {
 
         const { email, firstName, lastName, role, isActivated} = req.body.dataForUpdate;
        
-
         const isAdmin = userHost.role === "root" ? true : false;
         
-        console.log("new controller check:", 
-        "isAdmin", isAdmin,"userId", userId, 
-        "email", email, 
-        "firstName",  firstName, 
-        "lastName", lastName, 
-        "role", role,
-        "isActivated", isActivated,
-        "idHost",idHost)
         // console.log("new controller check:", 
         // "isAdmin", isAdmin,"userId", userId, 
         // "email", email, 
         // "firstName",  firstName, 
         // "lastName", lastName, 
         // "role", role,
-        // "isActivated", isActivated)
-
-        // if(String(idHost) !== String(userId) && !isAdmin){
-        //     console.log("idHost", String(idHost), "(userId)", String(userId))
-        //     return next(ApiError.BadRequest('Unothorized to change other user data'))
-        // }
+        // "isActivated", isActivated,
+        // "idHost",idHost)
 
         userId =  isAdmin ? userId : idHost;
 
-        console.log("userId", userId, idHost)
+        // console.log("userId", userId, idHost)
 
         const userUpdatedData =  await userService.update(isAdmin, userId, email, firstName, lastName, role, isActivated);
 
@@ -131,16 +118,21 @@ export const deleteUser =  async(req, res, next) =>  {
 }
  
 
-
 export const login =  async(req, res, next) =>  {
+    const errors = validationResult(req); //result from express validators
+        
+    if(!errors.isEmpty()){
+        return next(ApiError.BadRequest('Validation error', errors.array()))
+    }
+
+
     try{
         const {email, password} = req.body;
+
+
         const userData = await userService.login(email, password);
         
         res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true}) //for clientSide cookies refreshToken
-        
-        // setTimeout(() => {
-        // }, 300)
         
         return res.json(userData); //sent in client side json object
 
@@ -148,6 +140,7 @@ export const login =  async(req, res, next) =>  {
         next(err) //we use error middleware 
     }
 }
+
 
 export const logout =  async(req, res, next) =>  {
     try{
@@ -171,6 +164,58 @@ export const activate =  async(req, res, next) =>  {
         next(err)
     }
 }
+
+export const forgotPassword =  async(req, res, next) =>  {
+    console.log("forgot password start", req.protocol, req.get('host'))
+    const errors = validationResult(req); //result from express validators
+    if(!errors.isEmpty()){
+        return next(ApiError.BadRequest('Validation error', errors.array()))
+    }
+
+    const {email} = req.body;
+    if(!email){
+        return next(ApiError.BadRequest('Email missing'))
+    }
+
+    try{
+       await userService.forgotPassword(req, email);
+      
+       res.status(200).json({
+        status: "success",
+        message: 'password reset link send to user email'
+       })
+    }catch(err){
+        next(err)
+    }
+}
+
+export const resetPassword =  async(req, res, next) =>  {
+    console.log("start reset password",)
+    const errors = validationResult(req); //result from express validators
+   
+    if(!errors.isEmpty()){
+        return next(ApiError.BadRequest('Validation error', errors.array()))
+    }
+    const { password, confirmPassword} = req.body;
+    const {passwordResetToken} = req.params;
+    console.log("reset password", password, confirmPassword, passwordResetToken)
+
+    if(!passwordResetToken || ! password || !confirmPassword){
+        return next(ApiError.BadRequest('Incomplete data'))
+    }
+
+    try{
+        await userService.resetPassword(req, passwordResetToken, password, confirmPassword);
+       
+        res.status(200).json({
+         status: "success",
+         message: 'password was reseted'
+        })
+    }catch(err){
+        next(err)
+    }
+}
+
 
 
 export const refresh =  async(req, res, next) =>  {
@@ -271,7 +316,7 @@ export const  create =  async(req, res, next) =>  {
             return next(ApiError.BadRequest('Validation error', errors.array()))
         }
         const {email, password, firstName, lastName, role} = req.body;
-        const userData = await userService.registration(email, password, firstName, lastName, role, true);
+        const userData = await userService.registration(req, email, password, firstName, lastName, role, true);
         return res.json(userData); //sent in client side json object
     }catch(err){
         next(err)

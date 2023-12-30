@@ -4,7 +4,7 @@ const UserSchema = new Schema({
     password: {type: String, required: true},
     isActivated: {type: Boolean, default: false},
     activationLink: {type: String},
-
+    passwordResetToken: {type: String},
     firstName: {type: String, trim: true, lowercase: true, required: true},
     lastName: {type: String, trim: true,lowercase: true, trim: true,required: true},
     createdDateTime: {type: Date, required: true},

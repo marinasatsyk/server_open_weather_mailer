@@ -10,13 +10,17 @@ import UserDto from '../dtos/user-dto.js';
 import { ApiError } from "../exceptions/api-error.js";
 import UserFullDto from "../dtos/user-full-dto.js";
 import { historyDataCreate } from "./weather-service.js";
+import TokenModel from "../models/token-model.js";
+
 
 const SALTROUNDS = 10;
 const {SERVER_HOST, SERVER_PORT} = process.env;
+const ACESS_TOKEN_KEY = process.env.JWT_ACCESS_SECRET;
+const REFRESH_TOKEN_KEY =  process.env.JWT_REFRESH_SECRET;
 
 
 //CREATE
-export const registration = async (email, password, firstName, lastName, role = 'user', isAdminCreate = false) => {
+export const registration = async (req, email, password, firstName, lastName, role = 'user', isAdminCreate = false) => {
     console.log(email, password, firstName, lastName, role);
     const candidate = await UserModel.findOne({email})
     if(candidate){
@@ -40,7 +44,9 @@ export const registration = async (email, password, firstName, lastName, role = 
     }) 
     //send confirm mail+ activation link
     const mailService = new MailService();
-    await mailService.sendActivationMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/activate/${activationLink}`)
+
+    //changed host and protocol
+    await mailService.sendActivationMail(email, `${req.protocol}://${req.get('host')}/api/activate/${activationLink}`)
 
     // await  mailService.sendActivationMail(email, activationLink);
     const userDto = new UserDto(userDoc); //id, email, isActivated
@@ -97,11 +103,9 @@ export const login = async (email, password) => {
 
     console.log("❤️❤️❤️❤️❤️❤️ list of cities to update", citiesIdToUpdate)
 
-
    await Promise.all(citiesIdToUpdate.map(async(bookmark)  => {
         await historyDataCreate(bookmark.city._id, bookmark.city.lat, bookmark.city.lon)
     }))
-
 
     const userFullDto = new UserFullDto(userDoc);
     const userDto = new UserDto(userDoc);
@@ -111,6 +115,79 @@ export const login = async (email, password) => {
 
      return{ ...tokens, user: userFullDto }
 }
+
+
+export const forgotPassword = async(req, email) => {
+    const userDoc = await UserModel.findOne({email});
+   
+    if(!userDoc){
+        throw ApiError.BadRequest('User doesn\'t found')
+    }
+
+    const payload = {
+        userId : userDoc._id,
+        email: userDoc.email
+    }
+    //Generate reset password token
+    // const passwordResetToken = await jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '10m'});
+    const passwordResetToken = await jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '10m'});
+    console.log("passwordResetToken", passwordResetToken)
+
+    userDoc.passwordResetToken = passwordResetToken;
+
+    await userDoc.save({validateBeforeSave: false});
+
+
+    //Send reset password link
+    const mailService = new MailService();
+    // await mailService.sendResetPasswordMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/reset/password/${activationLink}`)
+  
+    try{
+        console.log("try mailservice")
+        await mailService.sendResetPasswordMail(
+            email, 
+            `${req.protocol}://${req.get('host')}/api/reset/password/${passwordResetToken}`
+        )
+   }catch(err){
+        //handle errors
+        userDoc.passwordResetToken = undefined;
+        userDoc.save({validateBeforeSave: false});
+        throw ApiError.BadRequest('There was an error sending password reset email. Please try again later.')
+   }
+
+};
+
+export const resetPassword = async (req, passwordResetToken, password, confirmPassword) => {
+    console.log("start resetPassword")
+   
+    try{
+       const passwordResetTokenVerify =  jwt.verify(passwordResetToken, ACESS_TOKEN_KEY);
+       
+       console.log("passwordResetTokenVerify", passwordResetTokenVerify)
+   }catch(err){
+     throw ApiError.BadRequest('Token is invalid')
+   }
+
+
+    const userDoc = await UserModel.findOne({passwordResetToken});
+    console.log("userDoc search", userDoc)
+    if(!userDoc){
+        throw ApiError.BadRequest('User doesn\'t found')
+    }
+
+    if(password !== confirmPassword){
+        throw ApiError.BadRequest('Passwords are differents')
+    }
+
+
+     //crypt password 
+     const hash = await bcrypt.hash(password, SALTROUNDS);
+
+     userDoc.password = hash;
+     userDoc.passwordResetToken = undefined;
+
+    const updatedUser =  await userDoc.save();
+};
 
 //UPDATE
 export const update = async(isAdmin, userId, email,  firstName, lastName, role, isActivated)=> {
@@ -168,7 +245,6 @@ export const update = async(isAdmin, userId, email,  firstName, lastName, role, 
         const mailService = new MailService();
         await mailService.sendActivationMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/activate/${activationLink}`)
     }
-
     
     return updatedUser;
 }
@@ -185,7 +261,8 @@ export const deleteUser = async (idUser) => {
         throw ApiError.BadRequest('User doesn\'t found');
     }
 
-    const deletedUser =  UserModel.findByIdAndDelete(idUser);
+    const deletedToken  = await TokenModel.findOneAndDelete({user: userDoc._id});
+    const deletedUser = await  UserModel.findByIdAndDelete(idUser);
     console.log("deletedUser", deletedUser);
    
    return deletedUser

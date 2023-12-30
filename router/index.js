@@ -24,33 +24,50 @@ router.post('/registration',
         .isLength({min:2, max: 32})
         .trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
     userController.registration);
+    
 router.get('/user', authMiddleware,   userController.getUser);
 
-router.put('/user/:id/update', 
-authMiddleware,  
-param("id").exists().isString().trim() ,
-body('dataForUpdate.email').isEmail().normalizeEmail(),
+router.put('/user/:id/update',   authMiddleware,  
+    param("id").exists().isString().trim() ,
+    body('dataForUpdate.email').isEmail().normalizeEmail(),
 
-body('dataForUpdate.firstName')
-.notEmpty()
-.isString()
-.isLength({min:2, max: 32})
-.trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
+    body('dataForUpdate.firstName')
+    .notEmpty()
+    .isString()
+    .isLength({min:2, max: 32})
+    .trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
 
-body('dataForUpdate.lastName')
-.notEmpty()
-.isLength({min:2, max: 32})
-.trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
-
+    body('dataForUpdate.lastName')
+    .notEmpty()
+    .isLength({min:2, max: 32})
+    .trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
 userController.updateUser);
 
+
 router.delete('/user/:id/delete', authMiddleware, userController.deleteUser);
-    
+
 //authentication
-router.post('/login', userController.login);
-router.get('/validateAuth', authMiddleware);
+router.post('/login',
+        body('email').isEmail().normalizeEmail(),
+        body('password').isLength({min:2, max: 32}).trim(),
+        userController.login);
+        router.get('/validateAuth', authMiddleware);
 
 router.get('/activate/:link', userController.activate); //for activate account from mail
+
+//forgot password
+ router.post('/forgot/password', 
+ body('email').isEmail().normalizeEmail(),
+ userController.forgotPassword); //for generate link to reset password
+
+ //for reset password
+ router.patch('/reset/password/:passwordResetToken', 
+        body('password').isLength({min:2, max: 32}).trim(),
+        body('confirmPassword').isLength({min:2, max: 32}).trim(),
+        param("passwordResetToken").exists().isString(),
+        userController.resetPassword);
+ 
+
 router.get('/refresh', userController.refresh); //is token expired
 router.post('/logout', userController.logout);
 //#todo
@@ -67,7 +84,7 @@ router.post('/logoutAll', userController.logoutAll); //delete all refreshTokens
 //         body('country').isString().trim().escape(),
 //         userController.updateBookmarks)
 
-router.post('/user/bookmarks',authMiddleware,userController.updateBookmarks);
+router.post('/user/bookmarks',authMiddleware ,userController.updateBookmarks);
 router.put('/user/bookmarks',authMiddleware,userController.updateActiveBookmark);
 router.delete('/user/bookmarks',authMiddleware,userController.deleteBookmark);
 
@@ -105,14 +122,14 @@ body('cityId')
     .withMessage('The field city id is not valid.'),
  weatherController.historyWeather);
 
-
  router.post('/weather/history/available', body('cityId')
     .notEmpty()
     .isString()
     .trim()
     .withMessage('The field city id is not valid.'), weatherController.historyAvailable);
+
 //#todo
-router.get('/forecast-climat',authMiddleware, weatherController.climatWeather);
+// router.get('/forecast-climat',authMiddleware, weatherController.climatWeather);
 
 
 //access admin routes
@@ -137,7 +154,6 @@ router.post('/admin/user/create',
 router.get('/admin/user/:id', authMiddleware,   userController.getUser);
 
 
-// router.post('admin/user/edit', authAdminMiddleware, userController.edit);
 // router.post('admin/user/deconnect', authAdminMiddleware, userController.deconnect);
 // router.delete('admin/user', authAdminMiddleware, userController.delete);
 
