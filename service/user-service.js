@@ -123,31 +123,38 @@ export const forgotPassword = async(req, email) => {
     if(!userDoc){
         throw ApiError.BadRequest('User doesn\'t found')
     }
+    console.log("userDoc forgot", userDoc);
 
+    
     const payload = {
         userId : userDoc._id,
         email: userDoc.email
     }
     //Generate reset password token
-    // const passwordResetToken = await jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '10m'});
-    const passwordResetToken = await jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '10m'});
-    console.log("passwordResetToken", passwordResetToken)
-
-    userDoc.passwordResetToken = passwordResetToken;
-
-    await userDoc.save({validateBeforeSave: false});
-
-
-    //Send reset password link
-    const mailService = new MailService();
-    // await mailService.sendResetPasswordMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/reset/password/${activationLink}`)
-  
+    
     try{
-        console.log("try mailservice")
+        const passwordResetToken =  jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '10m'});
+
+        console.log("passwordResetToken", passwordResetToken)
+
+        userDoc.passwordResetToken = passwordResetToken;
+
+
+        await userDoc.save({validateBeforeSave: false});
+
+        //Send reset password link
+        const mailService = new MailService();
+        // await mailService.sendResetPasswordMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/reset/password/${activationLink}`)
+  
+   
+        console.log("try mailservice",  `http://${process.env.HOST}:${process.env.CLIENT_PORT}/reset/password/${passwordResetToken}`)
+       
         await mailService.sendResetPasswordMail(
             email, 
-            `${req.protocol}://${req.get('host')}/api/reset/password/${passwordResetToken}`
+            // `${req.protocol}://${req.get('host')}/api/reset/password/${passwordResetToken}`
+            `http://${process.env.HOST}:${process.env.CLIENT_PORT}/reset/password/${passwordResetToken}`
         )
+
    }catch(err){
         //handle errors
         userDoc.passwordResetToken = undefined;

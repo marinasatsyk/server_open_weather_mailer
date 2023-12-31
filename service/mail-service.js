@@ -35,6 +35,8 @@ class MailService{
     }
 
     async sendResetPasswordMail (to, link) {
+
+        console.log("*****************************************sendResetPasswordMail", to, link)
         await this.transporter.sendMail({
             from: SMTP_USER,
             to,
