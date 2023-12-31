@@ -425,8 +425,6 @@ export const updateActiveBookmark = async (idUser, cityId, isHistory) => {
 
 
 
-
-
 export const deleteBookmark = async (idUser, cityId) => {
     const userDoc = await UserModel.findById(idUser);
     console.log('userDoc', userDoc)
@@ -434,8 +432,16 @@ export const deleteBookmark = async (idUser, cityId) => {
         throw ApiError.BadRequest('User doesn\'t found');
     }
 
-    const isActiveDeletingCity =  userDoc.bookmarks.find(bookmark => String(bookmark.city) === cityId );
-  
+    let isActiveDeletingCity = false;
+
+    const deletingCityBm =  userDoc.bookmarks.find(bookmark => String(bookmark.city) === cityId );
+   
+    if(deletingCityBm.isActive){
+        isActiveDeletingCity = true
+    }
+
+    console.log("❤️isActiveDeletingCity", isActiveDeletingCity)
+
     await UserModel.updateOne(
         { _id: idUser },
         { $pull: { 'bookmarks': { city: cityId } }}
@@ -444,14 +450,15 @@ export const deleteBookmark = async (idUser, cityId) => {
     const updatedUser = await UserModel.findById(idUser).populate('bookmarks.city');
 
     if(isActiveDeletingCity){
-        
        if(updatedUser.bookmarks.length) { 
         updatedUser.bookmarks[0].isActive = true
        }
+
         await  updatedUser.save();
         const newUpdated = await UserModel.findById(idUser).populate('bookmarks.city');
         return newUpdated;
     }
+
     return updatedUser
 }
 
