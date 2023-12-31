@@ -49,9 +49,12 @@ class MailService{
                 <div>If I accidentally sent you this email I'm apologize for  your concern.</div>
                 <div>Happy New Year, have a nice day</div>
 
-                <h1>For reset your password click here. This link is valid for 10 minutes</h1>
-                <a href='${link}'>${link}</a>
-                <div>If you are not  the author of the password change just ignore it</div>
+                <div>Hello ${to}</div>
+                <div>Someone has requested a link to change your password. You can do this through the link below.</div>
+                <div>This link is valid for 10 minutes</div>
+                <a href='${link}'>Reset my password</a>
+                <div>If you didn't request this, please ignore this email.</div>
+                <div>Your password won't change until you access the link above and create a new one.</div>
             </div>
             `
         })
