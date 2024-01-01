@@ -22,7 +22,14 @@ export const  registration =  async(req, res, next) =>  {
         const userData = await userService.registration(req, email, password, firstName, lastName);
         
         //for clientSide cookies refreshToken
-        res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true}) 
+        res.cookie('refreshToken', userData.refreshToken, {
+            maxAge: 30 * 24 * 60 * 1000, 
+            httpOnly: true,          
+            sameSite: 'None', // Ajout de SameSite=None
+            secure: true
+
+        
+        }) 
         return res.json(userData); //sent in client side json object
     }catch(err){
         next(err)
@@ -71,23 +78,12 @@ export const updateUser =  async(req, res, next) =>  {
         const { email, firstName, lastName, role, isActivated} = req.body.dataForUpdate;
        
         const isAdmin = userHost.role === "root" ? true : false;
-        
-        // console.log("new controller check:", 
-        // "isAdmin", isAdmin,"userId", userId, 
-        // "email", email, 
-        // "firstName",  firstName, 
-        // "lastName", lastName, 
-        // "role", role,
-        // "isActivated", isActivated,
-        // "idHost",idHost)
 
         userId =  isAdmin ? userId : idHost;
 
-        // console.log("userId", userId, idHost)
-
         const userUpdatedData =  await userService.update(isAdmin, userId, email, firstName, lastName, role, isActivated);
-
-         return res.json(userUpdatedData); //sent in client side json object
+       
+        return res.json(userUpdatedData); 
     }catch(err){
         next(err)
     }
@@ -98,14 +94,11 @@ export const deleteUser =  async(req, res, next) =>  {
 
     let {id : userId } = req.params;
 
-    console.log("userId", userId, req.params)
     const idHost = helpers.getId(req, res, next);
-    console.log("idHost", idHost)
 
     try{  
         const userHost =  await userService.getUser(idHost);
         const isAdmin = userHost.role === "root" ? true : false;
-        console.log("isAdmin", isAdmin)
         
         if(!isAdmin){
             userId = idHost;
@@ -132,12 +125,18 @@ export const login =  async(req, res, next) =>  {
 
         const userData = await userService.login(email, password);
         
-        res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true}) //for clientSide cookies refreshToken
+        res.cookie('refreshToken', userData.refreshToken, {
+            maxAge: 30 * 24 * 60 * 1000, 
+            httpOnly: true,
+            sameSite: 'None', // Ajout de SameSite=None
+            secure: true
+        }) //for clientSide cookies refreshToken
         
-        return res.json(userData); //sent in client side json object
+        return res.json(userData); 
 
     }catch(err){
-        next(err) //we use error middleware 
+        //we use error middleware 
+        next(err) 
     }
 }
 
@@ -159,14 +158,15 @@ export const activate =  async(req, res, next) =>  {
     try{
         const activationLink = req.params.link;
         await userService.activate(activationLink);
-        return res.redirect(process.env.CLIENT_URL); //redirction of client side
+
+        //TODO change for prod redirction of client side
+        return res.redirect(process.env.CLIENT_URL); 
     }catch(err){
         next(err)
     }
 }
 
 export const forgotPassword =  async(req, res, next) =>  {
-    console.log("forgot password start", req.protocol, req.get('host'))
     const errors = validationResult(req); //result from express validators
     if(!errors.isEmpty()){
         return next(ApiError.BadRequest('Validation error', errors.array()))
@@ -190,7 +190,6 @@ export const forgotPassword =  async(req, res, next) =>  {
 }
 
 export const resetPassword =  async(req, res, next) =>  {
-    console.log("start reset password",)
     const errors = validationResult(req); //result from express validators
    
     if(!errors.isEmpty()){
@@ -198,7 +197,6 @@ export const resetPassword =  async(req, res, next) =>  {
     }
     const { password, confirmPassword} = req.body;
     const {passwordResetToken} = req.params;
-    console.log("reset password", password, confirmPassword, passwordResetToken)
 
     if(!passwordResetToken || ! password || !confirmPassword){
         return next(ApiError.BadRequest('Incomplete data'))
@@ -217,53 +215,45 @@ export const resetPassword =  async(req, res, next) =>  {
 }
 
 
-
+/**Token */
 export const refresh =  async(req, res, next) =>  {
     try{
         const {refreshToken} = req.cookies;
-        console.log('❤️refreshToken ===START refresh***=== /refresh', refreshToken);
-        
         const userData = await userService.refreshToken(refreshToken);
-
-        console.log("====****continue in controller refresh**====", "old refresh:", refreshToken, "new refresh:", userData.refreshToken)
-        
-        res.cookie('refreshToken', userData.refreshToken, {maxAge: 30 * 24 * 60 * 1000, httpOnly: true}) //for clientSide cookies refreshToken
-       
-        return res.json(userData); //sent in client side json object
-
+        res.cookie('refreshToken', userData.refreshToken, {
+            maxAge: 30 * 24 * 60 * 1000, 
+            httpOnly: true,
+            sameSite: 'None', // Ajout de SameSite=None
+            secure: true
+        }) //for clientSide cookies refreshToken
+        //sent in client side json object
+        console.log("❗refresh token")
+        return res.json(userData); 
     }catch(err){
         next(err)
     }
 }
 
 
-/**Bookmarks
- */
+/**Bookmarks*/
 
 //create
 export const updateBookmarks =  async(req, res, next) =>  {
     /** this service create one bookmark
-     * create city if there is not
-     * get hiscorical data 
+     * create city if it doesn't exist yet
+     * get and record hiscorical data 
      * update user information
      */
 
-    console.log("we update bookmarks!!!")
    //get one user
    const{city, isHistory, isActive } = req.body;
-
    const idUser = helpers.getId(req, res, next);
-
    try{
         const userDoc = await UserModel.findById(idUser);
-        
         if(!userDoc){
             throw ApiError.BadRequest('User doesn\'t found');
         }
-
         const updatedUser = await userService.updateBookmarks(userDoc, city, isHistory, isActive);
-        
-        console.log("controller reponse ====> ", updatedUser)
         return res.json(updatedUser);
    }catch(err){
     next(err)
@@ -283,7 +273,6 @@ export const updateActiveBookmark =  async(req, res, next) =>  {
    }
 }
 
-
 //delete
 export const deleteBookmark =  async(req, res, next) =>  {
    const{cityId } = req.body;
@@ -297,12 +286,10 @@ export const deleteBookmark =  async(req, res, next) =>  {
 }
 
 
-
-/**admin  */
+/**Admin*/
 export const getAllUsers =  async(req, res, next) =>  {
     try{
         const users = await userService.getAllUsers();
-        console.log("users", users)
         return res.json(users)
     }catch(err){
         next(err)
@@ -322,40 +309,4 @@ export const  create =  async(req, res, next) =>  {
         next(err)
     }
 }
-
-
-
-
-
-export const logoutAll =  async(req, res, next) =>  {
-    try{
-        // const users = await userService.getAllUsers();
-        // return res.json(users)
-
-    }catch(err){
-        next(err)
-    }
-}
-// export const update =  async(req, res, next) =>  {
-//     try{
-        
-//         // let fields = 
-//         // const users = await userService.getAllUsers();
-//         // return res.json(users)
-
-//     }catch(err){
-//         next(err)
-//     }
-// } 
-
-export const dashboard =  async(req, res, next) =>  {
-    try{
-        // const users = await userService.getAllUsers();
-        // return res.json(users)
-
-    }catch(err){
-        next(err)
-    }
-}
-
 

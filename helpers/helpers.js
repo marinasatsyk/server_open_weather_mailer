@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { ApiError } from '../exceptions/api-error.js';
 import historicalWeatherModel from '../models/historical-weather-model.js';
-import chalk from 'chalk';
 
 export const getId = (req, res, next) =>   {
     const {refreshToken} = req.cookies;
@@ -10,8 +9,7 @@ export const getId = (req, res, next) =>   {
       return next(ApiError.UnauthorizedError())
     }
     const decode = jwt.decode(refreshToken);
-    console.log("DECODE refresh===>", decode)
-    
+    console.log("📞decode token", decode)
     const id = decode.id;
     return id;
 }
@@ -38,7 +36,6 @@ function isValidTimestamp(date) {
   
   
 export function dateToTimestamp(dateString) {
-      console.log("dateToTimestamp", dateString);
       const [day, month, year] = dateString.split('/').map(Number);
     
       const date = new Date(`${year}-${month}-${day}`);
@@ -70,7 +67,6 @@ export function convertDateToUnixTimestamp(date) {
     return null;
   }
 
-  // La méthode getTime() renvoie le timestamp en millisecondes, alors divisez par 1000 pour obtenir le timestamp Unix en secondes.
   return Math.floor(date.getTime() / 1000);
 }  
 
@@ -81,8 +77,6 @@ export const  getUnixTimestampsYearRange = async(cityId)=> {
       .findOne({city: cityId})
       .sort({ dt: 'desc' }) // Trie par ordre décroissant sur le champ dt
       .exec();
-
-  console.log(chalk.yellow("mostRecentDocument", mostRecentDocument))
 
   let startDateUnix;
   
@@ -105,8 +99,6 @@ export const  getUnixTimestampsYearRange = async(cityId)=> {
 
   //end date is allways today
   const endDateUnix = convertDateToUnixTimestamp(currentDate);
-
-  console.log(chalk.yellow("dates from getUnixTimestamp", convertUNIXtoISO(startDateUnix), convertUNIXtoISO(endDateUnix)))
 
   return {  startDateUnix,  endDateUnix };
 }

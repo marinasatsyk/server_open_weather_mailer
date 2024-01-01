@@ -21,7 +21,6 @@ const REFRESH_TOKEN_KEY =  process.env.JWT_REFRESH_SECRET;
 
 //CREATE
 export const registration = async (req, email, password, firstName, lastName, role = 'user', isAdminCreate = false) => {
-    console.log(email, password, firstName, lastName, role);
     const candidate = await UserModel.findOne({email})
     if(candidate){
         throw ApiError.BadRequest('email exists');  
@@ -53,12 +52,8 @@ export const registration = async (req, email, password, firstName, lastName, ro
 
     //generate tokens
     const tokens = await tokenService.generateToken({...userDto});
-   
-    console.log('😍😍', tokens)
 
     await tokenService.saveToken(userDto.id,  tokens.refreshToken)
-
-    console.log( userDto )
 
    return{ ...tokens, user:isAdminCreate ?userDoc : userDto }
 }
@@ -77,31 +72,23 @@ export const activate = async (activationLink) => {
 }
 
 export const login = async (email, password) => {
-    console.log("login")
     const userDoc = await UserModel.findOne({email}).populate('bookmarks.city');
     if(!userDoc){
         throw ApiError.BadRequest('User doesn\'t found')
     }
     const compare = await bcrypt.compare(password, userDoc.password);
-    console.log("compare", compare)
     
     if(!compare){
-        console.log("no compaire")
         throw ApiError.BadRequest('Wrong username or password')
     }
 
     //verif if email is activated
     if(!userDoc.isActivated){
-        console.log("no activated")
         throw ApiError.BadRequest('Email was not activated')
     }
 
-    //update historical data
-
-    console.log("userDoc dans login", userDoc)    
+    //update historical data when user connecting
     const citiesIdToUpdate = userDoc.bookmarks.filter((bookmark) => bookmark.isFollowHistory === true);
-
-    console.log("❤️❤️❤️❤️❤️❤️ list of cities to update", citiesIdToUpdate)
 
    await Promise.all(citiesIdToUpdate.map(async(bookmark)  => {
         await historyDataCreate(bookmark.city._id, bookmark.city.lat, bookmark.city.lon)
@@ -123,35 +110,25 @@ export const forgotPassword = async(req, email) => {
     if(!userDoc){
         throw ApiError.BadRequest('User doesn\'t found')
     }
-    console.log("userDoc forgot", userDoc);
-
     
     const payload = {
         userId : userDoc._id,
         email: userDoc.email
     }
     //Generate reset password token
-    
     try{
         const passwordResetToken =  jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '10m'});
 
-        console.log("passwordResetToken", passwordResetToken)
-
         userDoc.passwordResetToken = passwordResetToken;
-
-
         await userDoc.save({validateBeforeSave: false});
 
         //Send reset password link
         const mailService = new MailService();
-        // await mailService.sendResetPasswordMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/reset/password/${activationLink}`)
-  
+
    
-        console.log("try mailservice",  `http://${process.env.HOST}:${process.env.CLIENT_PORT}/reset/password/${passwordResetToken}`)
-       
+       //TODO change for prod
         await mailService.sendResetPasswordMail(
             email, 
-            // `${req.protocol}://${req.get('host')}/api/reset/password/${passwordResetToken}`
             `http://${process.env.HOST}:${process.env.CLIENT_PORT}/reset/password/${passwordResetToken}`
         )
 
@@ -161,23 +138,19 @@ export const forgotPassword = async(req, email) => {
         userDoc.save({validateBeforeSave: false});
         throw ApiError.BadRequest('There was an error sending password reset email. Please try again later.')
    }
-
 };
 
 export const resetPassword = async (req, passwordResetToken, password, confirmPassword) => {
-    console.log("start resetPassword")
    
     try{
        const passwordResetTokenVerify =  jwt.verify(passwordResetToken, ACESS_TOKEN_KEY);
        
-       console.log("passwordResetTokenVerify", passwordResetTokenVerify)
    }catch(err){
-     throw ApiError.BadRequest('Token is invalid')
+     throw ApiError.BadRequest('Token is invalid');
    }
 
-
     const userDoc = await UserModel.findOne({passwordResetToken});
-    console.log("userDoc search", userDoc)
+   
     if(!userDoc){
         throw ApiError.BadRequest('User doesn\'t found')
     }
@@ -185,7 +158,6 @@ export const resetPassword = async (req, passwordResetToken, password, confirmPa
     if(password !== confirmPassword){
         throw ApiError.BadRequest('Passwords are differents')
     }
-
 
      //crypt password 
      const hash = await bcrypt.hash(password, SALTROUNDS);
@@ -198,21 +170,12 @@ export const resetPassword = async (req, passwordResetToken, password, confirmPa
 
 //UPDATE
 export const update = async(isAdmin, userId, email,  firstName, lastName, role, isActivated)=> {
-   
-    console.log("new data:", 
-    "isAdmin", isAdmin,"userId", userId, 
-    "email", email, 
-    "firstName",  firstName, 
-    "lastName", lastName, 
-    "role", role,
-    "isActivated", isActivated)
+ 
     //find user to update
     const userDoc = await UserModel.findById(userId);
     if(!userDoc){
       throw ApiError.BadRequest('User doesn\'t found')
     }
-    
-    console.log("*****update", userDoc)
 
     //verification email exists if change email
     if(userDoc.email !== email){
@@ -220,11 +183,9 @@ export const update = async(isAdmin, userId, email,  firstName, lastName, role, 
         if(candidate){
             throw ApiError.BadRequest('email exists');  
         }
-        console.log("email change", email)
     }
 
     //only admin can update role&activation status
-
     const dataToUpdate = {};
 
     // Mettre à jour uniquement les champs présents dans la requête
@@ -237,19 +198,18 @@ export const update = async(isAdmin, userId, email,  firstName, lastName, role, 
     
     // Si aucun champ à mettre à jour, ne rien faire
     if (Object.keys(dataToUpdate).length === 0) {
-        console.log("Aucun champ à mettre à jour");
         return userDoc;
     }
-    console.log("dataToUpdate", dataToUpdate);
-    const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate, { new: true });
-    console.log("updated User", updatedUser);
 
+    const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate, { new: true });
 
     //if we change email and admin doesn't activate new email wi send
     if(isAdmin && userDoc.email !== email && !isActivated || !isAdmin && userDoc.email !== email){
         const activationLink = uuidv4();
+
         //send confirm mail+ activation link
         const mailService = new MailService();
+
         await mailService.sendActivationMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/activate/${activationLink}`)
     }
     
@@ -259,10 +219,7 @@ export const update = async(isAdmin, userId, email,  firstName, lastName, role, 
 
 //DELETE
 export const deleteUser = async (idUser) => {
-    console.log("deleteUser", idUser)
     const userDoc = await UserModel.findById(idUser);
-
-    console.log('user finded fo delete', userDoc)
     
     if(!userDoc){
         throw ApiError.BadRequest('User doesn\'t found');
@@ -270,7 +227,6 @@ export const deleteUser = async (idUser) => {
 
     const deletedToken  = await TokenModel.findOneAndDelete({user: userDoc._id});
     const deletedUser = await  UserModel.findByIdAndDelete(idUser);
-    console.log("deletedUser", deletedUser);
    
    return deletedUser
 }
@@ -280,15 +236,14 @@ export const deleteUser = async (idUser) => {
 
 
 export const getUser = async (id) => {
-    console.log('==========================>we have acces to getUser')
     const userDoc = await UserModel.findById(id).populate('bookmarks.city');
+
     if(!userDoc){
       throw ApiError.BadRequest('User doesn\'t found')
     }
-    
-
 
     const userDto = new UserFullDto(userDoc);
+
     return userDto;
 }
 
@@ -301,65 +256,54 @@ export const logout = async (refreshToken) => {
 export const refreshToken = async (refreshToken) => {
     
     if(!refreshToken){
-        console.log('????no  refresh token')
-        throw ApiError.UnauthorizedError(); //user doesn't have the token
+        //user doesn't have the refresh token
+        throw ApiError.UnauthorizedError(); 
     }
 
     const userData = await tokenService.validateRefreshToken(refreshToken);
     const tokenFromDb = await tokenService.findToken(refreshToken);
 
-    console.log('❤️❤️❤️!!!!!!!!===> user service refreshToken', 
-    "refresh token from front", refreshToken,  
-    "validate refresh Token", userData,
-    "token found in db", tokenFromDb);
-
-
     if(!userData || !tokenFromDb){
-        throw ApiError.UnauthorizedError(); //user doesn't have the token
+        //user doesn't have the token
+        throw ApiError.UnauthorizedError(); 
     }
-
    
-    const user = await UserModel.findById(userData.id) //user's info can change, so we use the current info db
+
+    //user's info can change, so we use the current info db
+    const user = await UserModel.findById(userData.id) 
 
     const userDto = new UserDto(user);
     const userFullDto = new UserFullDto(user);
 
-    //??we generate both???
     const tokens = await tokenService.generateToken({...userDto});
-    console.log('😍😍 from refresh', tokens)
 
     await tokenService.saveToken(userDto.id,  tokens.refreshToken)
 
-    console.log( 'from refresh userDto', userFullDto )
     return{ ...tokens, user: userFullDto }
 }
 
 
 //Bookmarks
 
-
 //create
 export const updateBookmarks = async (userDoc, city, isHistory, isActive) => {
-    console.log("SERVICE in updateBookmarks ")
     
-    //history part!!!!
+    //history part
     const cityDoc = await CityServise.findOrCreateCity(city, isHistory);
-        console.log("city info after creation or search", cityDoc)
+
     if(!cityDoc){
         throw ApiError.apply('Error of city creation')
     }
-
-    console.log('NEW CITY id stringify', String(cityDoc._id))
 
     const idsBokmarks = userDoc.bookmarks.map((bookmark) => {
         return String(bookmark.city._id);
     })
 
-    //verify if city doesn't exists yet
+   //verify if city doesn't exists yet
    const isFound = idsBokmarks.includes(String(cityDoc._id));
    
-   //if no bookmarks the first will by active
 
+   //if no bookmarks the first will by active
    if(!idsBokmarks.length){
         isActive = true;
     }
@@ -394,6 +338,7 @@ export const updateActiveBookmark = async (idUser, cityId, isHistory) => {
     if(!userDoc){
         throw ApiError.BadRequest('User doesn\'t found');
     }
+    
    userDoc.bookmarks.forEach(bookmark => {
        if (String(bookmark.city) === cityId){
             bookmark.isActive = true;
@@ -407,7 +352,6 @@ export const updateActiveBookmark = async (idUser, cityId, isHistory) => {
         const candidateCity = await CityModel.findById(cityId);  
 
         if(candidateCity){
-            console.log('UPDATED HISTORY status candidateCity exists', candidateCity)
             
             //we search and save history
             await historyDataCreate(candidateCity._id, candidateCity.lat, candidateCity.lon);
@@ -427,7 +371,7 @@ export const updateActiveBookmark = async (idUser, cityId, isHistory) => {
 
 export const deleteBookmark = async (idUser, cityId) => {
     const userDoc = await UserModel.findById(idUser);
-    console.log('userDoc', userDoc)
+   
     if(!userDoc){
         throw ApiError.BadRequest('User doesn\'t found');
     }
@@ -439,8 +383,6 @@ export const deleteBookmark = async (idUser, cityId) => {
     if(deletingCityBm.isActive){
         isActiveDeletingCity = true
     }
-
-    console.log("❤️isActiveDeletingCity", isActiveDeletingCity)
 
     await UserModel.updateOne(
         { _id: idUser },

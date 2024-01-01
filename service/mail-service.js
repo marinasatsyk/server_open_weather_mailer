@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-const {SMTP_HOST, SMTP_PORT_TLS, SMTP_USER, SMTP_APP_PASSWORD, API_URL} =  process.env
+const {SMTP_HOST, SMTP_PORT_TLS, SMTP_USER, SMTP_APP_PASSWORD} =  process.env
 
 class MailService{
     constructor(){
@@ -19,16 +19,20 @@ class MailService{
         await this.transporter.sendMail({
             from: SMTP_USER,
             to,
-            subject: `Account activation to ${API_URL}`,
+            subject: `Account activation to OpenWeatherApp`,
             text: '',
             html:
             `
             <div>
                 <div>Hello, this is a  test of application for a student project</div>
-                <div>I'm sorry to bother you. Just ignore this email</div>
+                <div>If I accidentally sent you this email I'm apologize for  your concern.</div>
                 <div>Happy New Year, have a nice day</div>
-                <h1>For activation  your account click here</h1>
-                <a href='${link}'>${link}</a>
+                
+                <div>Hello ${to}</div>
+                <div>For activation  your account click here</div>
+                <a href='${link}'>Activate my account Open Weather App</a>
+                <div>If you didn't request this, please ignore this email.</div>
+
             </div>
             `
         })
@@ -36,11 +40,10 @@ class MailService{
 
     async sendResetPasswordMail (to, link) {
 
-        console.log("*****************************************sendResetPasswordMail", to, link)
         await this.transporter.sendMail({
             from: SMTP_USER,
             to,
-            subject: `Password change request recieved to ${API_URL}`,
+            subject: `Password change request recieved to OpenWeatherApp`,
             text: '',
             html:
             `

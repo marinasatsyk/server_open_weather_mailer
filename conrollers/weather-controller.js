@@ -1,18 +1,14 @@
 import { ApiError } from '../exceptions/api-error.js';
 import chalk from "chalk";
-import { dateToTimestamp, convertUNIXtoISO } from '../helpers/helpers.js';
 import historicalWeatherModel from '../models/historical-weather-model.js';
 import mongoose from 'mongoose';
-import { getCurrentWheather, getHistoryDataHourlyByRange, getLongForecastWheatherDaily, getPollutionWheather, getShortForecastWheatherHourly } from '../service/weather-service.js';
+import { getCurrentWheather,  getLongForecastWheatherDaily, getPollutionWheather, getShortForecastWheatherHourly } from '../service/weather-service.js';
 import CityModel from '../models/city-model.js';
 const  APPID = process.env.STUDENT_API_key;
 
 
 export const historyWeather = async (req, res, next) => {
     const {startDate, endDate, cityId} = req.body;
-   
-    // const start = dateToTimestamp(req.body.start); //format string "01/01/2022, date strictement 1 an avant de requete"
-    // const end = dateToTimestamp(req.body?.end);
    
     //verif if dateTimestamp
     if(!startDate || !endDate || !cityId){
@@ -26,9 +22,6 @@ export const historyWeather = async (req, res, next) => {
     }
  
     try {
-        console.log("cityCandidat.id", cityCandidat);
-        console.log(chalk.yellow("lat lon type appid", startDate, endDate, cityId))
-
         const dataHisotricalWeather = await   historicalWeatherModel.find({
             "city": cityCandidat._id,
             "dt": { $gte: startDate, $lte: endDate }
@@ -50,8 +43,6 @@ export const historyWeather = async (req, res, next) => {
             list: dataHisotricalWeather,
             city: modifiedCityCandidat
         }
-        console.log("dataHisotricalWeather", cityCandidat);
-        // console.log("dataHisotricalWeather", dataHisotricalWeather.length, dataHisotricalWeather[0]);
 
         return res.json(dataForSend);
     } catch (error) {
@@ -80,10 +71,8 @@ export const historyAvailable = async(req, res, next) => {
             {}, 
             { sort: { 'dt': 1 }}
         )
-        
 
         const finded = new Date(dataHisotricalWeather.dt * 1000);
-        console.log(finded);
 
         const dataForReq = {
             dt: dataHisotricalWeather.dt,
@@ -91,7 +80,6 @@ export const historyAvailable = async(req, res, next) => {
             city_name: cityCandidat.name
         }
 
-        console.log("dataForReq", dataForReq)
         return res.json(dataForReq)
     
     }catch(err){
@@ -110,13 +98,9 @@ export const currentWeather =  async(req, res, next) =>  {
         let currentWeather = await getCurrentWheather(lat, lon);
         const pollutionWeather = await getPollutionWheather(lat, lon);
         
-        console.log("*************************controller", pollutionWeather)
-        
         if(pollutionWeather&&pollutionWeather.list.length){
             currentWeather.pollution = pollutionWeather.list[0];
         }
-        
-        console.log("!!!*************************controller", currentWeather)
 
         return res.json(currentWeather)
 
@@ -176,17 +160,14 @@ export const pollutionWeather =  async(req, res, next) =>  {
     }
 }
 
-
-
-
 //TODO
-export const climatWeather =  async(req, res, next) =>  {
-    try{
+// export const climatWeather =  async(req, res, next) =>  {
+//     try{
 
-    }catch(err){
-        next(err)
-    }
-}
+//     }catch(err){
+//         next(err)
+//     }
+// }
 
 
 

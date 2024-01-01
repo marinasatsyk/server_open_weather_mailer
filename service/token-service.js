@@ -5,14 +5,10 @@ const REFRESH_TOKEN_KEY=  process.env.JWT_REFRESH_SECRET;
 
 
 export const generateToken = async(payload) => {
-    console.log("payload", payload)
-    const accessToken = jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '30s'})
+    console.log("❗generate tokens")
+    const accessToken = jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '10m'})
     const refreshToken = jwt.sign(payload, REFRESH_TOKEN_KEY, {expiresIn: '30d'})
 
-    console.log('from generateToken',   accessToken,
-    )
-    console.log(
-    '❤️❤️❤️refreshToken', refreshToken)
     return {
         accessToken,
         refreshToken
@@ -20,10 +16,8 @@ export const generateToken = async(payload) => {
 }
 
 export const reGenerateOneToken = async(payload) => {
-    console.log("payload", payload)
+    console.log("❗regenerate tokens")
     const accessToken = jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '30s'});
-
-    console.log('from generateToken',   accessToken )
     
     return {
         accessToken,
@@ -34,12 +28,10 @@ export const reGenerateOneToken = async(payload) => {
 
 
 export const validateAccessToken = async(token) => {
-
+    console.log("❗validate access token")
     try{
-        console.log('from validate access token', token)
         const userData =  jwt.verify(token, ACESS_TOKEN_KEY);
 
-        console.log('🎲🎲🎲validate Access Token', userData)
         return userData;
     }catch(err){
         console.error(err);
@@ -47,40 +39,31 @@ export const validateAccessToken = async(token) => {
     }
 }
 export const validateRefreshToken = async(refreshToken) => {
-    console.log('❤️==========================> validateRefreshToken ')
-    
+    console.log("❗validate refresh token")
     try{
         const userData = jwt.verify(refreshToken, REFRESH_TOKEN_KEY)
-        console.log('❤️jwt verify userData', userData)
         return userData;
-
     }catch(err){
         return null;
     }
 }
 
-
-
-//doesn't permit to loggin from differents mashines. we lost connexion . 
-
+//doesn't permit to loggin from differents mashines. we lost connexion. 
 export const saveToken = async(userId, refreshToken) => {
-    console.log('FROM SAVE TOKEN', userId, refreshToken)
-
+    console.log("❗save token db")
     const tokenData = await TokenModel.findOne({user: userId})
-    console.log('find one', tokenData)
+    
     //if !first login
     if(tokenData){
-        tokenData.refreshToken = refreshToken // we re-recorde refreshToken
+        // we re-recorde refreshToken
+        tokenData.refreshToken = refreshToken 
         return tokenData.save();
     }
     
     //if first time loggin
     const token = await TokenModel.create({user: userId, refreshToken});
-   console.log('token first One', token)
     return token;
 }
-
-
 
 
 export const removeToken = async(refreshToken) => {
@@ -91,7 +74,7 @@ export const removeToken = async(refreshToken) => {
 }
 
 export const findToken = async(refreshToken) => {
-    console.log("find token", refreshToken)
+    console.log("❗find refreshToken token", refreshToken)
     const tokenData = await TokenModel.findOne({refreshToken});
     return tokenData;
 }
