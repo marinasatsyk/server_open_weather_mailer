@@ -14,7 +14,7 @@ import TokenModel from "../models/token-model.js";
 
 
 const SALTROUNDS = 10;
-const {SERVER_HOST, SERVER_PORT} = process.env;
+const {SERVER_HOST, SERVER_PORT, CLIENT_URL} = process.env;
 const ACESS_TOKEN_KEY = process.env.JWT_ACCESS_SECRET;
 const REFRESH_TOKEN_KEY =  process.env.JWT_REFRESH_SECRET;
 
@@ -45,9 +45,8 @@ export const registration = async (req, email, password, firstName, lastName, ro
     const mailService = new MailService();
 
     //changed host and protocol
-    await mailService.sendActivationMail(email, `${req.protocol}://${req.get('host')}/api/activate/${activationLink}`)
+    await mailService.sendActivationMail(email, `${req.protocol}://${req.get('host')}/openweatherapp/activate/${activationLink}`)
 
-    // await  mailService.sendActivationMail(email, activationLink);
     const userDto = new UserDto(userDoc); //id, email, isActivated
 
     //generate tokens
@@ -128,8 +127,11 @@ export const forgotPassword = async(req, email) => {
    
        //TODO change for prod
         await mailService.sendResetPasswordMail(
-            email, 
-            `http://${process.env.HOST}:${process.env.CLIENT_PORT}/reset/password/${passwordResetToken}`
+            email,
+            //dev 
+             `${CLIENT_URL}/reset/password/${passwordResetToken}`
+            //prod
+           // ``${CLIENT_URL}/openweatherapp/reset/password/${passwordResetToken}`
         )
 
    }catch(err){
@@ -210,7 +212,10 @@ export const update = async(isAdmin, userId, email,  firstName, lastName, role, 
         //send confirm mail+ activation link
         const mailService = new MailService();
 
-        await mailService.sendActivationMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/api/activate/${activationLink}`)
+        //for dev
+        // await mailService.sendActivationMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/app/activate/${activationLink}`)
+        //for prod
+        await mailService.sendActivationMail(email, `${req.protocol}://${req.get('host')}/openweatherapp/activate/${activationLink}`)
     }
     
     return updatedUser;
