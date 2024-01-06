@@ -25,10 +25,8 @@ export const  registration =  async(req, res, next) =>  {
         res.cookie('refreshToken', userData.refreshToken, {
             maxAge: 30 * 24 * 60 * 1000, 
             httpOnly: true,          
-            sameSite: 'None', // Ajout de SameSite=None
+            sameSite: 'None', 
             secure: true
-
-        
         }) 
         return res.json(userData); //sent in client side json object
     }catch(err){
@@ -128,7 +126,7 @@ export const login =  async(req, res, next) =>  {
         res.cookie('refreshToken', userData.refreshToken, {
             maxAge: 30 * 24 * 60 * 1000, 
             httpOnly: true,
-            sameSite: 'None', // Ajout de SameSite=None
+            sameSite: 'None', 
             secure: true
         }) //for clientSide cookies refreshToken
         
@@ -218,16 +216,23 @@ export const resetPassword =  async(req, res, next) =>  {
 /**Token */
 export const refresh =  async(req, res, next) =>  {
     try{
+        //we get refresh from cookies;
         const {refreshToken} = req.cookies;
+        console.log("❗refreshToken",refreshToken)
+        //here we get user Data + new access token
         const userData = await userService.refreshToken(refreshToken);
-        res.cookie('refreshToken', userData.refreshToken, {
+       
+        //we send the old refresh token
+       
+        res.cookie('refreshToken', refreshToken, {
+        // res.cookie('refreshToken', userData.refreshToken, {
             maxAge: 30 * 24 * 60 * 1000, 
             httpOnly: true,
             sameSite: 'None', // Ajout de SameSite=None
             secure: true
         }) //for clientSide cookies refreshToken
+        console.log("refreshToken", refreshToken)
         //sent in client side json object
-        console.log("❗refresh token")
         return res.json(userData); 
     }catch(err){
         next(err)

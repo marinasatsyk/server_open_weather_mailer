@@ -30,7 +30,6 @@ router.get('/user', authMiddleware,   userController.getUser);
 router.put('/user/:id/update',   authMiddleware,  
     param("id").exists().isString().trim() ,
     body('dataForUpdate.email').isEmail().normalizeEmail(),
-
     body('dataForUpdate.firstName')
     .notEmpty()
     .isString()

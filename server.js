@@ -21,7 +21,7 @@ import { errorMiddleware } from './middlewares/error-middleware.js';
 
 
 const PORT = process.env.SERVER_PORT;
-const {SERVER_HOST, HOST,  CLIENT_PORT} = process.env;
+const {SERVER_HOST,  CLIENT_URL, NODE_ENV} = process.env;
 
 const URI = `${process.env.URI_MONGO}${process.env.DB_NAME}`;
 const DB_NAME = `${process.env.DB_NAME}`;
@@ -32,8 +32,10 @@ const app = express();
 
 app.use(cors({
     credentials: true,
-    //TO change for prod
-    origin: `http://localhost:3000` //react runs in 3000
+    //dev
+    origin: `http://localhost:3000` 
+    //prod
+    //origin: `${CLIENT_URL}` 
 }));
 
 app.use(express.json());
@@ -45,6 +47,7 @@ app.use(cookieParser());
 // app.use(cors());
 // app.options('*', cors());
 
+// const baseUrl = NODE_ENV === "dev" ? "/app" : '/openweatherapp';
 
 app.use('/openweatherapp', router);
 

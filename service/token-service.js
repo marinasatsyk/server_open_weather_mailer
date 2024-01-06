@@ -16,15 +16,13 @@ export const generateToken = async(payload) => {
 }
 
 export const reGenerateOneToken = async(payload) => {
-    console.log("❗regenerate tokens")
-    const accessToken = jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '30s'});
+    console.log("❗regenerate one token")
+    const accessToken = jwt.sign(payload, ACESS_TOKEN_KEY, {expiresIn: '10m'});
     
     return {
-        accessToken,
-        refreshToken
+        accessToken
     }
 }
-
 
 
 export const validateAccessToken = async(token) => {

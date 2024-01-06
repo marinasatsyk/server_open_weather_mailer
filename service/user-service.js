@@ -99,7 +99,7 @@ export const login = async (email, password) => {
 
     await tokenService.saveToken(userDto.id,  tokens.refreshToken)
 
-     return{ ...tokens, user: userFullDto }
+    return{ ...tokens, user: userFullDto }
 }
 
 
@@ -203,20 +203,22 @@ export const update = async(isAdmin, userId, email,  firstName, lastName, role, 
         return userDoc;
     }
 
-    const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate, { new: true });
+   
 
-    //if we change email and admin doesn't activate new email wi send
+    //if we change email and admin doesn't activate new email we send
     if(isAdmin && userDoc.email !== email && !isActivated || !isAdmin && userDoc.email !== email){
         const activationLink = uuidv4();
-
+        dataToUpdate.activationLink = activationLink;
         //send confirm mail+ activation link
         const mailService = new MailService();
-
         //for dev
         // await mailService.sendActivationMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/app/activate/${activationLink}`)
         //for prod
         await mailService.sendActivationMail(email, `${req.protocol}://${req.get('host')}/openweatherapp/activate/${activationLink}`)
     }
+
+    console.log("update data user", dataToUpdate)
+    const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate, { new: true });
     
     return updatedUser;
 }
@@ -269,7 +271,7 @@ export const refreshToken = async (refreshToken) => {
     const tokenFromDb = await tokenService.findToken(refreshToken);
 
     if(!userData || !tokenFromDb){
-        //user doesn't have the token
+        //user doesn't have the token or is expired
         throw ApiError.UnauthorizedError(); 
     }
    
@@ -280,11 +282,15 @@ export const refreshToken = async (refreshToken) => {
     const userDto = new UserDto(user);
     const userFullDto = new UserFullDto(user);
 
-    const tokens = await tokenService.generateToken({...userDto});
+    //
+  //  const tokens = await tokenService.generateToken({...userDto});
+     const {accessToken} = await tokenService.reGenerateOneToken({...userDto})
+    //we should not generate new access token
+    // await tokenService.saveToken(userDto.id,  tokens.refreshToken)
 
-    await tokenService.saveToken(userDto.id,  tokens.refreshToken)
-
-    return{ ...tokens, user: userFullDto }
+    console.log("***************😊 new one token", accessToken)
+    // return{ token, user: userFullDto }
+    return{ accessToken, user: userFullDto }
 }
 
 
