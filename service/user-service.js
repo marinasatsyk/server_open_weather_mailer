@@ -254,12 +254,6 @@ export const getUser = async (id) => {
     return userDto;
 }
 
-
-export const logout = async (refreshToken) => {
-    const token  = await tokenService.removeToken(refreshToken);
-    return token;
-}
-
 export const refreshToken = async (refreshToken) => {
     
     if(!refreshToken){

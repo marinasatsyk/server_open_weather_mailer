@@ -130,7 +130,8 @@ export const login =  async(req, res, next) =>  {
             secure: true
         }) //for clientSide cookies refreshToken
         
-        return res.json(userData); 
+        
+        return res.json(userData); //sent in client side json object 
 
     }catch(err){
         //we use error middleware 
@@ -142,11 +143,10 @@ export const login =  async(req, res, next) =>  {
 export const logout =  async(req, res, next) =>  {
     try{
         const {refreshToken} = req.cookies;
-
         const token =  await tokenService.removeToken(refreshToken);
-        
-        return res.json({"message": "you are logged out"}).redirect(process.env.CLIENT_URL); 
-
+        return res.json({
+            message: "You are logged out",
+        }); 
     }catch(err){
         next(err)
     }

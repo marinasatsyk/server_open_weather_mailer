@@ -12,7 +12,7 @@ const {stripLow, blacklist} = pkg;
 //#user crud
 router.post('/registration',
     body('email').isEmail().normalizeEmail(),
-    body('password').isLength({min:2, max: 32}).trim(),
+    body('password').isLength({min:6, max: 32}).trim(),
     body('firstName')
         .notEmpty()
         .isString()
@@ -42,7 +42,6 @@ router.put('/user/:id/update',   authMiddleware,
     .trim().customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
 userController.updateUser);
 
-
 router.delete('/user/:id/delete',
 param("id").exists().isString().trim() ,
 authMiddleware, userController.deleteUser);
@@ -50,7 +49,7 @@ authMiddleware, userController.deleteUser);
 //authentication
 router.post('/login',
         body('email').isEmail().normalizeEmail(),
-        body('password').isLength({min:2, max: 32}).trim(),
+        body('password').isLength({min:6, max: 32}).trim(),
         userController.login);
 
 router.get('/validateAuth', authMiddleware);
@@ -66,8 +65,8 @@ router.get('/activate/:link', userController.activate);
 
  //reset password
  router.patch('/reset/password/:passwordResetToken', 
-        body('password').isLength({min:2, max: 32}).trim(),
-        body('confirmPassword').isLength({min:2, max: 32}).trim(),
+        body('password').isLength({min:6, max: 32}).trim(),
+        body('confirmPassword').isLength({min:6, max: 32}).trim(),
         param("passwordResetToken").exists().isString(),
         userController.resetPassword);
  
@@ -126,9 +125,10 @@ router.post('/weather/history',authMiddleware,
 //admin routes
 router.get('/admin/users', authAdminMiddleware, userController.getAllUsers);
 
+
 router.post('/admin/user/create',
     body('email').isEmail().normalizeEmail(),
-    body('password').isLength({min:2, max: 32}).trim(),
+    body('password').isLength({min:6, max: 32}).trim(),
     body('firstName')
         .notEmpty()
         .isString()
@@ -144,7 +144,8 @@ router.post('/admin/user/create',
 
 router.get('/admin/user/:id', authMiddleware,   userController.getUser);
 
-//TODO admin functionality
+
+//TODO admin functionality for logout any user
 router.post('/logout', userController.logout);
 
 export default router;
