@@ -64,7 +64,7 @@ export const getUser =  async(req, res, next) =>  {
 //update user
 export const updateUser =  async(req, res, next) =>  {
     const idHost = helpers.getId(req, res, next);
-    let {id : userId} = req.params;
+        let {id : userId} = req.params;
 
     try{
         const userHost =  await userService.getUser(idHost);

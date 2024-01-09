@@ -171,17 +171,21 @@ export const resetPassword = async (req, passwordResetToken, password, confirmPa
 };
 
 //UPDATE
-export const update = async(isAdmin, userId, email,  firstName, lastName, role, isActivated)=> {
- 
-    //find user to update
+export const update = async(isAdmin, userId, emailToUpdate,  firstName, lastName, role, isActivated)=> {
+   
+    //find the user to update
     const userDoc = await UserModel.findById(userId);
     if(!userDoc){
       throw ApiError.BadRequest('User doesn\'t found')
     }
 
     //verification email exists if change email
-    if(userDoc.email !== email){
-        const candidate = await UserModel.findOne({email})
+
+    //if found user's email is different than the one in the request
+    if(userDoc.email !== emailToUpdate){
+        //check db if new email exists
+        const candidate = await UserModel.findOne({ email: emailToUpdate})
+        
         if(candidate){
             throw ApiError.BadRequest('email exists');  
         }
@@ -189,37 +193,35 @@ export const update = async(isAdmin, userId, email,  firstName, lastName, role, 
 
     //only admin can update role&activation status
     const dataToUpdate = {};
-
+    
     // Mettre à jour uniquement les champs présents dans la requête
-    if (email) dataToUpdate.email = email;
+    if (emailToUpdate) dataToUpdate.email = emailToUpdate;
     if (firstName) dataToUpdate.firstName = firstName;
     if (lastName) dataToUpdate.lastName = lastName;
     if (isAdmin) dataToUpdate.role = role;
     if (isAdmin) dataToUpdate.isActivated = isActivated;
-    if(!isAdmin && userDoc.email !== email) dataToUpdate.isActivated =  false;
-    
-    // Si aucun champ à mettre à jour, ne rien faire
+    if(!isAdmin && userDoc.email !== emailToUpdate) dataToUpdate.isActivated =  false;
+        
     if (Object.keys(dataToUpdate).length === 0) {
         return userDoc;
     }
 
    
-
-    //if we change email and admin doesn't activate new email we send
-    if(isAdmin && userDoc.email !== email && !isActivated || !isAdmin && userDoc.email !== email){
-        const activationLink = uuidv4();
+    //if we change email and admin doesn't activate new email we send activation link adn user is not activated
+    if(isAdmin && userDoc.email !== emailToUpdate && !isActivated || !isAdmin && userDoc.email !== emailToUpdate){
+        
+        const activationLink = uuidv4();       
         dataToUpdate.activationLink = activationLink;
         //send confirm mail+ activation link
         const mailService = new MailService();
         //for dev
-        // await mailService.sendActivationMail(email, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/app/activate/${activationLink}`)
+         await mailService.sendActivationMail(emailToUpdate, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/openweatherapp/activate/${activationLink}`)
         //for prod
-        await mailService.sendActivationMail(email, `${req.protocol}://${req.get('host')}/openweatherapp/activate/${activationLink}`)
+        //await mailService.sendActivationMail(emailToUpdate, `${req.protocol}://${req.get('host')}/openweatherapp/activate/${activationLink}`)
     }
 
-    console.log("update data user", dataToUpdate)
     const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate, { new: true });
-    
+
     return updatedUser;
 }
 
