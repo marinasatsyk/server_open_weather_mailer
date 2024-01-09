@@ -125,13 +125,13 @@ export const forgotPassword = async(req, email) => {
         const mailService = new MailService();
 
    
-       //TODO change for prod
+       //change for prod
         await mailService.sendResetPasswordMail(
             email,
             //dev 
-             `${CLIENT_URL}/reset/password/${passwordResetToken}`
+            // `${CLIENT_URL}/reset/password/${passwordResetToken}`
             //prod
-           // ``${CLIENT_URL}/openweatherapp/reset/password/${passwordResetToken}`
+            `${CLIENT_URL}/reset/password/${passwordResetToken}`
         )
 
    }catch(err){
@@ -274,22 +274,16 @@ export const refreshToken = async (refreshToken) => {
         //user doesn't have the token or is expired
         throw ApiError.UnauthorizedError(); 
     }
-   
 
+   
     //user's info can change, so we use the current info db
     const user = await UserModel.findById(userData.id) 
 
     const userDto = new UserDto(user);
     const userFullDto = new UserFullDto(user);
 
-    //
-  //  const tokens = await tokenService.generateToken({...userDto});
-     const {accessToken} = await tokenService.reGenerateOneToken({...userDto})
-    //we should not generate new access token
-    // await tokenService.saveToken(userDto.id,  tokens.refreshToken)
-
-    console.log("***************😊 new one token", accessToken)
-    // return{ token, user: userFullDto }
+    const {accessToken} = await tokenService.reGenerateOneToken({...userDto})
+    
     return{ accessToken, user: userFullDto }
 }
 

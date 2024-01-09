@@ -9,7 +9,6 @@ export const getId = (req, res, next) =>   {
       return next(ApiError.UnauthorizedError())
     }
     const decode = jwt.decode(refreshToken);
-    console.log("📞decode token", decode)
     const id = decode.id;
     return id;
 }

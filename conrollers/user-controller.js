@@ -1,6 +1,7 @@
 import { ApiError } from '../exceptions/api-error.js';
 import UserModel from '../models/user-model.js';
 import * as  userService from '../service/user-service.js';
+import * as tokenService from '../service/token-service.js';
 import { validationResult, param  } from 'express-validator';
 import * as helpers from '../helpers/helpers.js';
 import mongoose from 'mongoose';
@@ -116,7 +117,6 @@ export const login =  async(req, res, next) =>  {
         return next(ApiError.BadRequest('Validation error', errors.array()))
     }
 
-
     try{
         const {email, password} = req.body;
 
@@ -142,10 +142,10 @@ export const login =  async(req, res, next) =>  {
 export const logout =  async(req, res, next) =>  {
     try{
         const {refreshToken} = req.cookies;
-        const token = await userService.logout(refreshToken)
 
-        res.clearCookie('refreshToken');
-        return res.json(token);
+        const token =  await tokenService.removeToken(refreshToken);
+        
+        return res.json({"message": "you are logged out"}).redirect(process.env.CLIENT_URL); 
 
     }catch(err){
         next(err)
@@ -218,7 +218,7 @@ export const refresh =  async(req, res, next) =>  {
     try{
         //we get refresh from cookies;
         const {refreshToken} = req.cookies;
-        console.log("❗refreshToken",refreshToken)
+        
         //here we get user Data + new access token
         const userData = await userService.refreshToken(refreshToken);
        

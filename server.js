@@ -33,9 +33,9 @@ const app = express();
 app.use(cors({
     credentials: true,
     //dev
-    origin: `http://localhost:3000` 
-    //prod
-    //origin: `${CLIENT_URL}` 
+    // origin: `http://localhost:3000` 
+   //prod
+    origin: `${CLIENT_URL}` 
 }));
 
 app.use(express.json());
