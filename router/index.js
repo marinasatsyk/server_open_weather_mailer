@@ -18,13 +18,13 @@ router.post('/registration',
         .notEmpty()
         .isString()
         .isLength({min:2, max: 32})
-        .customSanitizer(value => blacklist(value, '\\<>/\'"')).escape(),
+        .customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
 
     body('lastName')
         .trim()
         .notEmpty()
         .isLength({min:2, max: 32})
-        .customSanitizer(value => blacklist(value, '\\<>/\'"')).escape(),
+        .customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
     userController.registration);
     
 router.get('/user', authMiddleware,   userController.getUser);
@@ -37,13 +37,13 @@ router.put('/user/:id/update',   authMiddleware,
     .notEmpty()
     .isString()
     .isLength({min:2, max: 32})
-    .customSanitizer(value => blacklist(value, '\\<>/\'"')).escape(),
+    .customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
 
     body('dataForUpdate.lastName')
     .trim()
     .notEmpty()
     .isLength({min:2, max: 32})
-    .customSanitizer(value => blacklist(value, '\\<>/\'"')).escape(),
+    .customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
 userController.updateUser);
 
 router.delete('/user/:id/delete',
@@ -53,7 +53,7 @@ authMiddleware, userController.deleteUser);
 //authentication
 router.post('/login',
         body('email').isEmail().normalizeEmail(),
-        body('password').trim().isLength({min:12, max: 32}),
+        body('password').trim().isLength({min:6, max: 32}),
         userController.login);
 
 router.get('/validateAuth', authMiddleware);
@@ -135,13 +135,13 @@ router.post('/admin/user/create',
         .notEmpty()
         .isString()
         .isLength({min:2, max: 32})
-        .customSanitizer(value => blacklist(value, '\\<>?:/\'"')).escape(),
+        .customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
 
     body('lastName')
         .trim()
         .notEmpty()
         .isLength({min:2, max: 32})
-        .customSanitizer(value => blacklist(value, '\\<>?:/\'"')).escape(),
+        .customSanitizer(value => blacklist(value, '<>&?:/"')).escape(),
     authAdminMiddleware, 
     userController.create);
 
