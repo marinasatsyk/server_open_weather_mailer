@@ -14,7 +14,7 @@ import TokenModel from "../models/token-model.js";
 
 
 const SALTROUNDS = 10;
-const {SERVER_HOST, SERVER_PORT, CLIENT_URL} = process.env;
+const {SERVER_HOST, SERVER_PORT, CLIENT_URL, NODE_ENV} = process.env;
 const ACESS_TOKEN_KEY = process.env.JWT_ACCESS_SECRET;
 const REFRESH_TOKEN_KEY =  process.env.JWT_REFRESH_SECRET;
 
@@ -214,10 +214,14 @@ export const update = async(isAdmin, userId, emailToUpdate,  firstName, lastName
         dataToUpdate.activationLink = activationLink;
         //send confirm mail+ activation link
         const mailService = new MailService();
+        
         //for dev
-         await mailService.sendActivationMail(emailToUpdate, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/openweatherapp/activate/${activationLink}`)
-        //for prod
-        //await mailService.sendActivationMail(emailToUpdate, `${req.protocol}://${req.get('host')}/openweatherapp/activate/${activationLink}`)
+        if (NODE_ENV === "dev"){
+            await mailService.sendActivationMail(emailToUpdate, `http://${process.env.SERVER_HOST}:${process.env.SERVER_PORT}/openweatherapp/activate/${activationLink}`)
+        }else{
+            //for prod
+            await mailService.sendActivationMail(emailToUpdate, `${req.protocol}://${req.get('host')}/openweatherapp/activate/${activationLink}`)
+        }
     }
 
     const updatedUser = await UserModel.findByIdAndUpdate(userId, dataToUpdate, { new: true });
