@@ -131,3 +131,4 @@ dist
 
 #other
 db_export.sh
+dump/*
